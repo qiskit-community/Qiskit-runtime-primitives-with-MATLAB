@@ -90,7 +90,7 @@ Now it is time to run the optimizer to find the ground state energy of H2 molecu
 After the max_iter reached ot the process stopped by the optimizer setting parameters, the progress towards convergence for H2 molecule as monitored by the cost history at each iteration:
 
 <p align="center">
-  <img width="600" height="400" src="https://github.ibm.com/Partnership-Integration/MATLAB-Qiskit-Runtime-Primitives/blob/main/tutorials/Ground%20State%20Energy%20of%20H2%20Molecule%20Using%20Estimator/Results/opt_h2.jpg">
+  <img width="600" height="400" src="https://github.com/qiskit-community/Qiskit-runtime-primitives-with-MATLAB/blob/main/tutorials/Ground%20State%20Energy%20of%20H2%20Molecule%20Using%20Estimator/Results/opt_h2.jpg">
 </p>
 
 The same process can be done for Maxcut problem with sampler or estimator to find the solution to the problem.
