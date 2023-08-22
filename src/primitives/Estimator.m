@@ -32,7 +32,7 @@ classdef Estimator
             hamiltonian = varargin{1,3};
 
             params = Options.SetOptions(circuit,1, hamiltonian);
-            %% Run the circuit on IBMQ Estimator program
+            %% Run the circuit on IBM Quantum Estimator primitive
             %%%% Submit the job
             jobinfo = Job.submitJob(params, hubinfo);
 
