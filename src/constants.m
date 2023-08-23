@@ -11,8 +11,11 @@
 
 classdef constants 
    properties(SetAccess = private)
-       urljob = 'https://runtime-us-east.quantum-computing.ibm.com/jobs/',
-       urllog = 'https://auth.quantum-computing.ibm.com/api/users/loginWithToken',
+       urljob_iqp = 'https://runtime-us-east.quantum-computing.ibm.com/jobs/',
+       urljob_crn = 'https://us-east.quantum-computing.cloud.ibm.com/jobs/',
+
+       urllog_iqp = 'https://auth.quantum-computing.ibm.com/api/users/loginWithToken',
+       urllog_crn = 'https://iam.cloud.ibm.com/identity/token',
        matlab_version = 'qiskit-version-2/0.39.2/MATLAB\',
    end
    methods(Static)

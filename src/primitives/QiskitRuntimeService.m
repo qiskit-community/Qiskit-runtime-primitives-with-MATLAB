@@ -14,25 +14,41 @@ classdef QiskitRuntimeService
     group = "open";
     project = "main";
     program_id = "estimator";
-    Access_API,
+    Access_API;
     backend = "ibmq_qasm_simulator";
     Start_session = true;
     session_id = [];
+    channel = [];
+    tokenType = '';
+    instance;
    end
    methods
-       function obj = QiskitRuntimeService(apiToken)
+       function obj = QiskitRuntimeService(channel, apiToken, instance)
             
-            Runtime_apiToken = LoginAPI(apiToken);
-           
-            obj.hub = "ibm-q";
-            obj.group = "open";
-            obj.project = "main";
-            obj.program_id = "estimator";
-            obj.Access_API = Runtime_apiToken.id;
-            obj.backend = "ibmq_qasm_simulator";
-            obj.Start_session = true;
-            obj.session_id = [];
+            Runtime_apiToken = get_API(channel, apiToken);
 
+            if channel == "ibm_cloud"
+                obj.program_id = "estimator";
+                obj.Access_API = Runtime_apiToken.access_token;
+                obj.tokenType = Runtime_apiToken.token_type;
+                obj.backend = "ibmq_qasm_simulator";
+                obj.Start_session = true;
+                obj.session_id = [];
+                obj.channel = "ibm_cloud";
+                obj.instance = instance;
+            else
+                obj.hub = "ibm-q";
+                obj.group = "open";
+                obj.project = "main";
+                obj.program_id = "estimator";
+                obj.Access_API = Runtime_apiToken.id;
+                obj.backend = "ibmq_qasm_simulator";
+                obj.channel = "ibm_quantum";
+                obj.Start_session = true;
+                obj.session_id = [];
+
+
+            end
  %%
        end
   end

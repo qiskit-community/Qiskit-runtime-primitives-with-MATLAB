@@ -8,17 +8,26 @@
 % copyright notice, and modified files need to carry a notice indicating
 % that they have been altered from the originals.
 
-function response = get_Api(apiToken)
+function response = get_API(channel, apiToken)
 %% Web Access using Data Import and Export API
 var = constants;
-uri = var.urllog;
-body = struct(...
-    'apiToken', apiToken...
-);
-options = weboptions(...
-    'ContentType', 'json',...
-    'MediaType', 'application/json'...
-);
+
+if channel =="ibm_cloud"
+    uri = var.urllog_crn;
+    body = append('grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=',apiToken);
+    options = weboptions('MediaType', 'application/x-www-form-urlencoded');
+else
+    uri = var.urllog_iqp;
+    body = struct(...
+        'apiToken', apiToken...
+    );
+    options = weboptions(...
+        'ContentType', 'json',...
+        'MediaType', 'application/json'...
+    );
+end
+
 response = webwrite(uri, body, options);
+
 
 end

@@ -26,10 +26,23 @@ highlight(h,1:numnodes(G),'MarkerSize',20)
 [sol,fval] = classical_optimizer(G);
 
 %% Solve the Maxcut problem using Qiskit Estimator Primitive
-apiToken= 'Put your IBM Quantum API Token here';
 
-service = QiskitRuntimeService(apiToken);
+%% Setup IBM Quantum cloud credentials
 
+% channel = "ibm_cloud";
+% apiToken = 'MY_IBM_CLOUD_API_KEY';
+% crn_service = 'MY_IBM_CLOUD_CRN';
+% 
+% service = QiskitRuntimeService(channel,apiToken,crn_service);
+
+
+%% Setup IBM Quantum Platform credentials
+channel = "ibm_quantum";
+apiToken = "MY_IBM_QUANTUM_TOKEN";
+
+service = QiskitRuntimeService(channel,apiToken,[]);
+
+%%
 service.program_id = "sampler";
 service.Start_session = false;
 backend="ibmq_qasm_simulator"; 

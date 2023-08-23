@@ -14,10 +14,22 @@ clc;
 clear;
 close all;
 
-%% IBM Quantum API token
-apiToken= 'Put your IBM Quantum API Token here';
+%% Setup IBM Quantum cloud credentials
 
-service = QiskitRuntimeService(apiToken);
+% channel = "ibm_cloud";
+% apiToken = 'MY_IBM_CLOUD_API_KEY';
+% crn_service = 'MY_IBM_CLOUD_CRN';
+% 
+% service = QiskitRuntimeService(channel,apiToken,crn_service);
+
+
+%% Setup IBM Quantum Platform credentials
+channel = "ibm_quantum";
+apiToken = "MY_IBM_QUANTUM_TOKEN";
+
+service = QiskitRuntimeService(channel,apiToken,[]);
+
+%%
 service.program_id = "estimator";
 service.Start_session = true;
 
@@ -79,10 +91,10 @@ function [energy] = cost_function(parameters,arg)
     ansatz = Twolocal(arg.circuit, parameters);
 
     estimator = arg.estimator;
-    job       = estimator.run(ansatz,arg.estimator.options.service,arg.hamiltonian);
+    job       = estimator.run(ansatz,arg.hamiltonian);
 
     %%%% Retrieve the results back
-    results = Job.retrieveResults(job.id,arg.estimator.options.service.Access_API);
-    energy  = results.values;
+    results   = estimator.Results(job.id);
+    energy    = results.values;
 end
 
