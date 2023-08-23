@@ -9,7 +9,7 @@
 % that they have been altered from the originals.
 
 
-classdef Estimator < Maxcut
+classdef Estimator
    properties
        session,
        circuits,

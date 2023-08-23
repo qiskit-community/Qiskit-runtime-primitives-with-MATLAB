@@ -9,7 +9,7 @@
 % that they have been altered from the originals.
 
 
-classdef Sampler < Maxcut
+classdef Sampler
    properties
        session,
        options,
