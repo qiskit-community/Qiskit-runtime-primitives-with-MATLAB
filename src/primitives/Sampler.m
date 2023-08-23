@@ -9,7 +9,7 @@
 % that they have been altered from the originals.
 
 
-classdef Sampler < Maxcut
+classdef Sampler
    properties
        session,
        options,
@@ -38,9 +38,9 @@ classdef Sampler < Maxcut
  %%     
       function result = Results(varargin)
             job_id = varargin{1,2};
-            Access_API  = varargin{1,3};
+            service  = varargin{1, 1}.options.service;
 
-            result = Job.retrieveResults(job_id, Access_API);
+            result = Job.retrieveResults(job_id, service);
 
       end
 

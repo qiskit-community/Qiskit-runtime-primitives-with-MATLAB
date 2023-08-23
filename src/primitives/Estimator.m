@@ -9,7 +9,7 @@
 % that they have been altered from the originals.
 
 
-classdef Estimator 
+classdef Estimator
    properties
        session,
        circuits,
@@ -17,7 +17,7 @@ classdef Estimator
        Hamiltonian,
        options,
    end
-   methods (Static)
+   methods
 
        function obj = Estimator(session,options)
             options.service.program_id = "estimator";
@@ -27,8 +27,8 @@ classdef Estimator
        end
 
        function jobinfo = run(varargin)
-            circuit     = varargin{1,1};
-            hubinfo     = varargin{1,2};
+            circuit     = varargin{1,2};
+            hubinfo     = varargin{1,1}.options.service;
             hamiltonian = varargin{1,3};
 
             params = Options.SetOptions(circuit,1, hamiltonian);
@@ -39,10 +39,10 @@ classdef Estimator
        end
       
       function result = Results(varargin)
-        job_id      = varargin{1,1};
-        Access_API  = varargin{1,2};
+        job_id      = varargin{1,2};
+        service     = varargin{1,1}.options.service;
 
-        result = Job.retrieveResults(job_id, Access_API);
+        result = Job.retrieveResults(job_id, service);
 
       end
 

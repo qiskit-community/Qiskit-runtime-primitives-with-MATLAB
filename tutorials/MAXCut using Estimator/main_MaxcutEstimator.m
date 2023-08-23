@@ -23,20 +23,33 @@ h = plot(G);
 highlight(h,1:numnodes(G),'MarkerSize',20)
 
 %% Solve the MaxCut problem Classically
-% [sol,fval] = classical_optimizer(G);
+[sol,fval] = classical_optimizer(G);
+
+%% Solve the Maxcut problem using Qiskit Estimator Primitive
+
+%% Setup IBM Quantum cloud credentials
+
+% channel = "ibm_cloud";
+% apiToken = 'MY_IBM_CLOUD_API_KEY';
+% crn_service = 'MY_IBM_CLOUD_CRN';
 % 
-% %% Solve the Maxcut problem using Qiskit Estimator Primitive
-% apiToken= 'Put your IBM Quantum API Token here';
-% 
-% service = QiskitRuntimeService(apiToken);
-% service.program_id = "estimator";
-% service.Start_session = true;
-% 
-% backend="ibmq_qasm_simulator"; 
+% service = QiskitRuntimeService(channel,apiToken,crn_service);
+
+%% Setup IBM Quantum Platform credentials
+channel = "ibm_quantum";
+apiToken = "MY_IBM_QUANTUM_TOKEN";
+
+service = QiskitRuntimeService(channel,apiToken,[]);
+
+%%
+service.program_id = "estimator";
+service.Start_session = true;
+
+backend="ibmq_qasm_simulator"; 
 
 %% Enable the session and Estimator
-% session = Session(service, backend);  
-% estimator = Estimator(session=session);
+session = Session(service, backend);  
+estimator = Estimator(session=session);
 
 %% 1. Mapping the problem (Maxcut problem) to qubits/Quantum Hamiltonian 
 %%% Convert the Maxcut problem into an Ising Hamiltonian
@@ -107,10 +120,10 @@ function [energy] = cost_function(parameters,arg)
     ansatz = Twolocal(arg.circuit, parameters);
 
     estimator = arg.estimator;
-    job       = estimator.run(ansatz,arg.estimator.options.service,arg.hamiltonian);
+    job       = estimator.run(ansatz,arg.hamiltonian);
 
     %%%% Retrieve the results back
-    results = Job.retrieveResults(job.id,arg.estimator.options.service.Access_API);
-    energy  = results.values;
+    results   = estimator.Results(job.id);
+    energy    = results.values;
 end
 

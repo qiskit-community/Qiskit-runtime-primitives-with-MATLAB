@@ -25,26 +25,50 @@ classdef Job
        function job_info = submitJob(varargin)
             params    = varargin{1,1};
             hubinfo    = varargin{1,2};
+ 
             var = constants;
-            authorization = weboptions(...
+            if hubinfo.channel == "ibm_cloud"
+              authorization = weboptions(...
+                    'MediaType', 'application/x-www-form-urlencoded',...
+                    'HeaderFields', {
+                        'x-qx-client-application' append(var.matlab_version,version)
+                        'Authorization' append(hubinfo.tokenType,' ', hubinfo.Access_API) 
+                        'Service-CRN' hubinfo.instance
+                        
+                    }...
+                );
+               url = var.urljob_crn;
+            
+               if isempty(hubinfo.session_id)
+                    start_session = true;
+                    txt = '{"program_id":"'+hubinfo.program_id+'","start_session":'+start_session+', "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}';
+               else
+                    txt = '{"program_id":"'+hubinfo.program_id+'","session_id":"'+hubinfo.session_id+'", "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}';
+               end
+
+            else
+               authorization = weboptions(...
                 'ContentType', 'json',...
                 'MediaType', 'application/x-www-form-urlencoded',...
                 'HeaderFields', {
                     'x-qx-client-application' append(var.matlab_version,version)
                     'x-access-token' hubinfo.Access_API
                 }...
-            );
-            url = var.urljob;
-            % Submit the first job to create a session
-            
-            if isempty(hubinfo.session_id)
-                start_session = true;
-                txt = ['{"program_id":"'+hubinfo.program_id+'","hub":"'+hubinfo.hub+'","group":"'+hubinfo.group+'","start_session":'+start_session+',"project":"'+hubinfo.project+'", "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}'];
-            else
-                txt = ['{"program_id":"'+hubinfo.program_id+'","hub":"'+hubinfo.hub+'","group":"'+hubinfo.group+'","session_id":"'+hubinfo.session_id+'","project":"'+hubinfo.project+'", "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}'];
-                
-            end
-            job = webwrite(url, txt, authorization)
+                );
+               url = var.urljob_iqp;
+
+               if isempty(hubinfo.session_id)
+                    start_session = true;
+                    txt = '{"program_id":"'+hubinfo.program_id+'","hub":"'+hubinfo.hub+'","group":"'+hubinfo.group+'","start_session":'+start_session+',"project":"'+hubinfo.project+'", "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}';
+               else
+                    txt = '{"program_id":"'+hubinfo.program_id+'","hub":"'+hubinfo.hub+'","group":"'+hubinfo.group+'","session_id":"'+hubinfo.session_id+'","project":"'+hubinfo.project+'", "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}';
+    
+               end
+
+            end %%% End of "ibm_cloud"
+                       
+ 
+            job = webwrite(url, txt, authorization);
             
             job_info.id = job.id
             job_info.backend = job.backend
@@ -52,35 +76,44 @@ classdef Job
       end
 %%
       function results = retrieveResults(varargin)
-        job_id = varargin{1,1};
-        Access_API  = varargin{1,2};
+        job_id  = varargin{1,1};
+        service = varargin{1,2};
         var = constants;
         status = '~'; %anything not empty so the loop starts
+
         while ~isempty(status)
             %%%% Read the Job status
-            
-            url = append(var.urljob,job_id);
-            options = weboptions(...
-                    'HeaderFields', {
-                    'x-access-token' Access_API
-                }...
-                );
-        
-        
-            response = webread(url, options);
-            status = response.status; 
+            if service.channel == "ibm_cloud"
+                url = append(var.urljob_crn,job_id);
+                options = weboptions(...
+                        'HeaderFields', {
+                          'Service-CRN' service.instance
+                          'Authorization' append(service.tokenType,' ', service.Access_API) 
+                    }...
+                    );
+                response = webread(url, options);
+                status = response.status; 
 
+            else
+                url = append(var.urljob_iqp,job_id);
+                options = weboptions(...
+                        'HeaderFields', {
+                        'x-access-token' service.Access_API
+                    }...
+                    );
+            
+            
+                response = webread(url, options);
+                status = response.status; 
+            end
             if status== "Completed"
                 %%%% Read the results
                 status
-                url = append(append(var.urljob,job_id),"/results");
-                options = weboptions(...
-                        'HeaderFields', {
-                        'x-access-token' Access_API
-                    }...
-                    );
-        
-        
+                if service.channel == "ibm_cloud"
+                    url = append(append(var.urljob_crn,job_id),"/results");
+                else
+                    url = append(append(var.urljob_iqp,job_id),"/results");
+                end
                 response = webread(url, options);
         
                 response = eraseBetween(response, 1, "{");
@@ -93,6 +126,7 @@ classdef Job
                 break;
             end
             pause(1);
+           
         end  %% End of While loop
 
     end  %% End of RetrieveResult Function
