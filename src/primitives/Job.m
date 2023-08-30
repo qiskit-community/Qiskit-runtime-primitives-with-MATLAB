@@ -67,12 +67,12 @@ classdef Job
 
             end %%% End of "ibm_cloud"
                        
- 
+            authorization.Timeout = var.timeout;
             job = webwrite(url, txt, authorization);
             
-            job_info.id = job.id
-            job_info.backend = job.backend
-            job_info.session_id = job.session_id
+            job_info.id = job.id;
+            job_info.backend = job.backend;
+            job_info.session_id = job.session_id;
       end
 %%
       function results = retrieveResults(varargin)
@@ -91,6 +91,7 @@ classdef Job
                           'Authorization' append(service.tokenType,' ', service.Access_API) 
                     }...
                     );
+                options.Timeout = var.timeout;
                 response = webread(url, options);
                 status = response.status; 
 
@@ -102,7 +103,7 @@ classdef Job
                     }...
                     );
             
-            
+                options.Timeout = var.timeout;
                 response = webread(url, options);
                 status = response.status; 
             end
