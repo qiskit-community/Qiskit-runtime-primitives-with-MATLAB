@@ -23,7 +23,7 @@ h = plot(G);
 highlight(h,1:numnodes(G),'MarkerSize',20)
 
 %% Solve the MaxCut problem Classically
-[sol,fval] = classical_optimizer(G);
+% [sol,fval] = classical_optimizer(G);
 
 %% Solve the Maxcut problem using Qiskit Estimator Primitive
 
@@ -72,6 +72,7 @@ max_iter = 40;
 lower_bound = repmat(-2*pi,circuit.num_parameters,1);
 upper_bound = repmat( 2*pi,circuit.num_parameters,1);
 
+
 options = optimoptions("surrogateopt",...
     "MaxFunctionEvaluations",max_iter, ...
     "PlotFcn","optimplotfval",...
@@ -91,7 +92,7 @@ rng default %% For reproducibility
 ansatz = Twolocal(circuit, angles);
 
 job = sampler.run(ansatz,sampler.options.service);
-results = Job.retrieveResults(job.id,sampler.options.service.Access_API);
+results = sampler.Results(job.id);
 %%% extract the Bitstring
 string_data = string(fieldnames(results.quasi_dists));
 bitstring_data = replace(string_data,"x","");
@@ -116,7 +117,7 @@ function energy = cost_function (parameters,arg)
     sampler = Sampler(session=arg.sampler.options);
     job     = sampler.run(ansatz,arg.sampler.options.service);
     %%%% Retrieve the results back
-    results = Job.retrieveResults(job.id,arg.sampler.options.service.Access_API);
+    results = sampler.Results(job.id);
     
     %%%%extract the Bitstring
     string_data = string(fieldnames(results.quasi_dists));

@@ -97,7 +97,7 @@ ansatz = Twolocal(circuit, angles);
 sampler = Sampler (session=session);
 
 job = sampler.run(ansatz,sampler.options.service);
-results = Job.retrieveResults(job.id,sampler.options.service.Access_API);
+results = sampler.Results(job.id);
 %%% extract the bitstring
 string_data = string(fieldnames(results.quasi_dists));
 bitstring_data = replace(string_data,"x","");
