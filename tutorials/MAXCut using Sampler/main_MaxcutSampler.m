@@ -23,7 +23,7 @@ h = plot(G);
 highlight(h,1:numnodes(G),'MarkerSize',20)
 
 %% Solve the MaxCut problem Classically
-% [sol,fval] = classical_optimizer(G);
+[sol,fval] = classical_optimizer(G);
 
 %% Solve the Maxcut problem using Qiskit Estimator Primitive
 
