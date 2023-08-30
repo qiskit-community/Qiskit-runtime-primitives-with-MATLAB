@@ -29,7 +29,7 @@ highlight(h,1:numnodes(G),'MarkerSize',20)
 
 %% Setup IBM Quantum cloud credentials
 
-% channel = "ibm_cloud";
+% channel = "ibm_cloud"; 
 % apiToken = 'MY_IBM_CLOUD_API_KEY';
 % crn_service = 'MY_IBM_CLOUD_CRN';
 % 
