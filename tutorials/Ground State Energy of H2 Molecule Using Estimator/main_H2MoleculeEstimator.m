@@ -25,9 +25,7 @@ close all;
 
 %% Setup IBM Quantum Platform credentials
 channel = "ibm_quantum";
-token_filename="token";
-apiToken=string(importdata(token_filename));
-%% 
+apiToken="MY_IBM_QUANTUM_TOKEN";
 service = QiskitRuntimeService(channel,apiToken,[]);
 
 %%
