@@ -84,7 +84,7 @@ options = optimoptions("surrogateopt",...
 %% 3. Executing the quantum VQE algorithm using the qiskit Estimator primititve and MATLAB 
 % optimizer to solve Maxcut problem
 
-rng default %% For reproducibility
+rng default %% For reproducibility 
 
 [angles,minEnergy] = surrogateopt(cost_func,lower_bound,upper_bound,options);
 

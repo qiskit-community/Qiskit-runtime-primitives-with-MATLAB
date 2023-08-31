@@ -23,13 +23,13 @@ h = plot(G);
 highlight(h,1:numnodes(G),'MarkerSize',20)
 
 %% Solve the MaxCut problem Classically
-% [sol,fval] = classical_optimizer(G);
+[sol,fval] = classical_optimizer(G);
 
 %% Solve the Maxcut problem using Qiskit Estimator Primitive
 
 %% Setup IBM Quantum cloud credentials
 
-% channel = "ibm_cloud";
+% channel = "ibm_cloud"; 
 % apiToken = 'MY_IBM_CLOUD_API_KEY';
 % crn_service = 'MY_IBM_CLOUD_CRN';
 % 
@@ -139,14 +139,12 @@ function energy = cost_function (parameters,arg)
 %%
 function expectation_value = evaluate_fcn(x_value,G)
         W = full(adjacency(G,'weighted'));
-        x = sym('x',[1 numnodes(G)]);
         %%% Create the objective function
-        for i=1:length(x)
-            for j=1:length(x)
-                T(i,j) = W(i,j)*x(i)*(1-x(j));
+        for i=1:length(x_value)
+            for j=1:length(x_value)
+                T(i,j) = W(i,j)*x_value(i)*(1-x_value(j));
             end
         end
         obj = sum(sum(T));
-        expectation_value = double(vpa(subs(obj(1),x,x_value)));
-        disp(expectation_value) % 
-    end
+        expectation_value = obj;      
+end

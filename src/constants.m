@@ -17,6 +17,8 @@ classdef constants
        urllog_iqp = 'https://auth.quantum-computing.ibm.com/api/users/loginWithToken',
        urllog_crn = 'https://iam.cloud.ibm.com/identity/token',
        matlab_version = 'qiskit-version-2/0.39.2/MATLAB\',
+
+       timeout = 100; %% Timeout session set to be 100 Sec
    end
    methods(Static)
 
