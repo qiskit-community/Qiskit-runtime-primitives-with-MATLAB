@@ -27,7 +27,7 @@ classdef TestMaxCutToIsing < matlab.unittest.TestCase
     methods (Test)
         function testMacCutToIsing (testCase,Graph)
 
-            Problem = MaxCutToIsing (Graph);
+            Problem = Maxcut.ToIsing (Graph);
             testCase.verifyNotEmpty(Problem);
         end
 

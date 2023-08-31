@@ -34,7 +34,8 @@ classdef Sampler_Estimator_testclass < matlab.unittest.TestCase
             %%%%%% Run the circuit on IBM Quantum Sampler program
 
             %%%% Submit the job
-            jobinfo = Sampler.run(params_Sampler,hubinfo_sampler);
+            jobinfo = Job.submitJob(params_Sampler,hubinfo_sampler.service);
+
             testCase.verifyGreaterThan(size(jobinfo.id,2),0)
             % testcase.verifyNotEmpty(jobinfo.id);
         end
@@ -44,7 +45,7 @@ classdef Sampler_Estimator_testclass < matlab.unittest.TestCase
             %%%%%% Run the circuit on IBM Quantum Sampler program
 
             %%%% Submit the job
-            jobinfo = Job.submitJob(params_Sampler,hubinfo_sampler);
+            jobinfo = Job.submitJob(params_Sampler,hubinfo_sampler.service);
             testCase.verifyGreaterThan(size(jobinfo.id,2),0)
             % testcase.verifyNotEmpty(jobinfo.id);
         end
@@ -54,8 +55,8 @@ classdef Sampler_Estimator_testclass < matlab.unittest.TestCase
             %%%%%% Run the circuit on IBM Quantum Sampler program
 
             %%%% Submit the job
-            jobinfo = Job.submitJob(params_Sampler,hubinfo_sampler);
-            Results = Job.retrieveResults(jobinfo.id,hubinfo_sampler.Access_API);
+            jobinfo = Job.submitJob(params_Sampler,hubinfo_sampler.service);
+            Results = Job.retrieveResults(jobinfo.id,hubinfo_sampler.service);
             testCase.verifyNotEmpty(Results)
             % testcase.verifyNotEmpty(jobinfo.id);
         end
@@ -65,7 +66,7 @@ classdef Sampler_Estimator_testclass < matlab.unittest.TestCase
             %%%%%% Run the circuit on IBM Quantum Estimator program
 
             %%%% Submit the job
-            jobinfo = Estimator.run(params_Estimator,hubinfo_estimator);
+            jobinfo = Job.submitJob(params_Estimator,hubinfo_estimator.service);
             testCase.verifyGreaterThan(size(jobinfo.id,2),0)
            
         end

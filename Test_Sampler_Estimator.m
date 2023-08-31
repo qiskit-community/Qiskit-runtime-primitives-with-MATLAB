@@ -8,33 +8,32 @@
 % copyright notice, and modified files need to carry a notice indicating
 % that they have been altered from the originals.
 
-function results = Test_Sampler_Estimator(apitoken)
+function results = Test_Sampler_Estimator(channel, apitoken, crn_service)
     
-    runtime_apiToken = LoginAPI(apitoken);
     
-    hubinfo = {};
-    hubinfo.hub = "ibm-q";
-    hubinfo.group = "open";
-    hubinfo.project = "main";
-    hubinfo.program_id = "sampler";
-    hubinfo.Access_API = runtime_apiToken.id;
-    hubinfo.backend = "ibmq_qasm_simulator";
-    hubinfo.Start_session = [];
-    hubinfo.session_id = [];
+   service = QiskitRuntimeService(channel,apitoken,crn_service);
+
+%%
+    service.program_id = "sampler";
+    service.Start_session = false;
+    backend="ibmq_qasm_simulator"; 
+
+    session = Session(service, backend);  
+
     % Build some circuits
     c1 = quantumCircuit([hGate(1) cxGate(1,2)]);
-    params_Sampler = Options.SetOptions(c1,hubinfo, []);
+    params_Sampler = Options.SetOptions(c1,0, []);
     observables.Pauli_Term = ["II","IZ","ZI","ZZ","XX"];
     observables.Coeffs = string([-1.0523732, 0.39793742, -0.3979374 , -0.0112801, 0.18093119]);
 
     
     params_Sampler = struct('params_Sampler', params_Sampler);
-    hubinfo_sampler = struct('hubinfo', hubinfo);
+    hubinfo_sampler = struct('session', session);
 
-    hubinfo.program_id = "estimator";
-    params_Estimator = Options.SetOptions(c1,hubinfo,observables);
+    session.service.program_id = "estimator";
+    params_Estimator = Options.SetOptions(c1,1,observables);
     params_Estimator = struct('params_Estimator', params_Estimator);
-    hubinfo_estimator = struct('hubinfo', hubinfo);
+    hubinfo_estimator = struct('session', session);
 
     circuits = struct('circuits', c1);
     observables = struct('observables', observables);
