@@ -21,7 +21,13 @@ In order to create a circuit and generate the corresponding QASM string, [MATLAB
 To run all tests and evaluate all the classes for sampler and estimator, from MATLAB execute the following command.
 
 ```
-result = Test_Sampler_Estimator ('put your IBM Quantum API token here')
+For IBM Quantum Platform:
+result = Test_Sampler_Estimator ('ibm_quantum','MY_IBM_QUANTUM_TOKEN', [])
+
+
+For IBM Quantum Cloud:
+result = Test_Sampler_Estimator ('ibm_cloud','MY_IBM_CLOUD_API_KEY','MY_IBM_CLOUD_CRN' )
+
 ```
 output:
 ```
