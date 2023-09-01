@@ -50,25 +50,29 @@ If you want to test the classes separately follow [this](/test/README.MD)!
 ##  Creating Your First Quantum Program in MATLAB and submit it to IBM Quantum simulator
 
 ```
-% Setup IBM Quantum credentials
-token = 'Input your IBM Quantum API token';
-%% Submit the token through the REST API to get the runtime primitive Access Token
-resp = LoginAPI(token);
-```
+%% Setup credentials
 
-After submitting your Token through the REST API, the received response will include an id that can be used to communicate with the runtime primitives.
+% IBM cloud example
+% channel = "ibm_cloud";
+% apiToken = 'MY_IBM_CLOUD_API_KEY';
+% crn_service = 'MY_IBM_CLOUD_CRN';
+% service = QiskitRuntimeService(channel,apiToken,crn_service);
 
-```
-%% 
-hubinfo = {};
-hubinfo.hub = "ibm-q";
-hubinfo.group = "open";
-hubinfo.project = "main";
-hubinfo.program_id = "sampler";
-hubinfo.Access_API = resp.id;
-hubinfo.backend = "ibmq_qasm_simulator";
-hubinfo.session_id = [];
-%%
+
+%% Setup IBM Quantum Platform credentials
+channel = "ibm_quantum";
+apiToken = "MY_IBM_QUANTUM_TOKEN";
+
+service = QiskitRuntimeService(channel,apiToken,[]);
+
+%% Define backend and access
+service.Start_session = false; %set to true to enable Qiskit Runtime Session 
+backend="ibmq_qasm_simulator";
+
+% service.hub = "your-hub"
+% service.group = "your-group"
+% service.project = "your-project"
+
 ```
 
 In this part we specify the required information that is needed to be set before communicating to the IBM Quantum systems/simulators. 
@@ -77,17 +81,17 @@ In this part we specify the required information that is needed to be set before
 circuit = quantumCircuit([hGate(1) cxGate(1,2)]);
 plot (circuit);
 ```
-By plotting the circuit, the generated circuit using quantum computing toolbox will be presneted with the defined gates, i.e.,
+By plotting the circuit, the generated circuit using quantum computing toolbox will be presented with the defined gates, i.e.,
 
 <p align="center">
   <img width="600" height="400" src="docs/images/BellState.jpg">
 </p>
 
-Now in roder to simulate the circuit using the MATLAB state vector simualtor, the follwing line should be executed through the command qindow:
+Now in order to simulate the circuit using the MATLAB state vector simulator, the following line should be executed through the command window:
 ```
-Results = simulate (circuit);
+Results = simulate(circuit);
 ```
-The output would be the follwing:
+The output would be the following:
 ```
 Results.BasisStates=
 00
@@ -114,20 +118,20 @@ histogram(Results)
 This simple example makes an entangled state, also called a [Bell state](https://en.wikipedia.org/wiki/Bell_state).
 
 
-Once you've made your first quantum circuit using MATLAB Quantum computing toolbox and simulate it using the internal state vector simulator, you can then set the options information (such as error mitigation methods,number of shots, observables, etc.) for the sampler and estimator primitives. The follwoing line shows how to call options and set the required information. The third argument would be an structure including the Pauli strings and the corresponding coefficients. For more information you can check the `MaxcutEstimator.m`. After calling the SetOption function, a Qasm string will be generated that will be used to submit the job.
+Once you've made your first quantum circuit using MATLAB Quantum computing toolbox and simulate it using the internal state vector simulator, you can then set the options information (such as error mitigation methods,number of shots, observables, etc.) for the sampler and estimator primitives. The following line shows how to call options and set the required information. The third argument would be an structure including the Pauli strings and the corresponding coefficients. For more information you can check the `MaxcutEstimator.m`. After calling the SetOption function, a Qasm string will be generated that will be used to submit the job.
 
 ```
-params = Options.SetOptions(circuit,hubinfo, problem);
-%Run the Sampler primitive and submit the job through REST API
-job = Sampler.run(params,hubinfo);
-```
+%% Enable the session and Sampler
+session = Session(service, backend);  
+sampler = Sampler(session=session);
+job1 = sampler.run(circuit);
 
-After submitting the job through the selected backend, the results can be retreived using the following:
+%% Retrieve the results back
+Results = sampler.Results(job1.id);
+Results
 
-```
-Results = Job.retrieveResults(job.id,hubinfo.Access_API);
 ```
 
 ## License
-[Apache License 2.0](https://github.ibm.com/Hamed-Mohammadbagherpoor/MATLAB-Runtime-Primitives/blob/main/LICENSE.txt)
+[Apache License 2.0](LICENSE)
 
