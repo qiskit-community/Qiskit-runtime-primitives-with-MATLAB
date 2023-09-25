@@ -15,14 +15,14 @@ In order to create a circuit and generate the corresponding QASM string, [MATLAB
 4. Run ```Startup``` inside the ```Command Window``` or open the file and run it through the ```MATLAB EDITOR```to ensure that all files in the repository are added to the MATLAB path.
 5. Double click on one of the tutorials such as ```Enable Seession/Estimator_SessionEnable.m``` and open the file. 
 6. Select one of the channel options (either ```IBM Quantum platform or IBM Quantum Cloud```) and input the required credentials.
-7. Run the Tutorials!
+7. Run the Tutorial!
 
 ## The ```tutorials``` folder includes several examples as follows:
 1. Enable Session:
    - ```Estimator_SessionEnable.m``` shows how to create a circuit, observables, initiate an ```Estimator``` runtime primitives and execute the circuit on IBM Quantum systems. 
    - ```Sampler_SessionEnable.m``` shows how to create a circuit, initiate an ```Sampler``` runtime primitives and execute the circuit on IBM Quantum systems. 
 2. Ground State Energy of H2 Molecule Using Estimator:
-   - In this example, we show that how to calculate the ground state energy of ```H2``` molecule using the provided Hamiltonian terms (Pauli terms and the coefficients), ```Esimator``` primitive and MATLAB global optimizer. The variational quantum eigensolver algorithm is ised to execute the circuit iteratively and find the minimum energy of the provided Hamiltonian.
+   - In this example, we show that how to calculate the ground state energy of ```H2``` molecule using the provided Hamiltonian terms (Pauli terms and the coefficients), ```Esimator``` primitive and MATLAB global optimizer. The variational quantum eigensolver algorithm is used to execute the circuit iteratively and find the minimum energy of the provided Hamiltonian.
 3. MAXCut using Estimator:
    - In this example a MAXCUT problem is solved using the ```Esimator``` primitive and MATLAB global optimizer. The problem first is converted to the equivalent Ising Hamiltonian and then fed into the Estimator and the optimizer to find the solution to the problem iteratively.
 4. MAXCut using Sampler
