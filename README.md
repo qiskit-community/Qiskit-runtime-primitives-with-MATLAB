@@ -12,9 +12,21 @@ In order to create a circuit and generate the corresponding QASM string, [MATLAB
 1. Install MATLAB 2023a. [Link](https://www.mathworks.com/help/install/)
 2. Install Quantum Computing Toolbox. [Link](https://www.mathworks.com/products/quantum-computing.html)
 3. Clone this repo into your local machine. [How to clone a repository from MATLAB?](https://www.mathworks.com/help/simulink/ug/clone-git-repository.html)
-4. Run ```startup.m``` to ensure that all files in the repository are added to the MATLAB path.
-5. Input your IBM Quantum API token into the Examples/tests. i.e. ```apiToken= 'put your IBM quantum API token'```
-6. Run the Examples/tests!
+4. Run ```Startup``` inside the ```Command Window``` or open the file and run it through the ```MATLAB EDITOR```to ensure that all files in the repository are added to the MATLAB path.
+5. Double click on one of the tutorials such as ```Enable Seession/Estimator_SessionEnable.m``` and open the file. 
+6. Select one of the channel options (either ```IBM Quantum platform or IBM Quantum Cloud```) and input the required credentials.
+7. Run the Tutorials!
+
+## The ```tutorials``` folder includes several examples as follows:
+1. Enable Session:
+   - ```Estimator_SessionEnable.m``` shows how to create a circuit, observables, initiate an ```Estimator``` runtime primitives and execute the circuit on IBM Quantum systems. 
+   - ```Sampler_SessionEnable.m``` shows how to create a circuit, initiate an ```Sampler``` runtime primitives and execute the circuit on IBM Quantum systems. 
+2. Ground State Energy of H2 Molecule Using Estimator:
+   - In this example, we show that how to calculate the ground state energy of ```H2``` molecule using the provided Hamiltonian terms (Pauli terms and the coefficients), ```Esimator``` primitive and MATLAB global optimizer. The variational quantum eigensolver algorithm is ised to execute the circuit iteratively and find the minimum energy of the provided Hamiltonian.
+3. MAXCut using Estimator:
+   - In this example a MAXCUT problem is solved using the ```Esimator``` primitive and MATLAB global optimizer. The problem first is converted to the equivalent Ising Hamiltonian and then fed into the Estimator and the optimizer to find the solution to the problem iteratively.
+4. MAXCut using Sampler
+   - In this example a MAXCUT problem is solved using the ```Sampler``` primitive and MATLAB global optimizer. A custome cost function is defined to calculate the expectation value of the problem iteratively using the bitstring returned from ```Sampler``` primitive at each step. MATLAB global optimizer is used to update the parameters at each step to find the solution to the problem iteratively.
 
 ## Test the defined classes
 
