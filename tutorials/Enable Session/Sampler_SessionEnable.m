@@ -28,10 +28,10 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
 service.Start_session = false; %set to true to enable Qiskit Runtime Session 
-backend="ibmq_qasm_simulator";
-% service.hub = "your-hub"
-% service.group = "your-group"
-% service.project = "your-project"
+backend="ibm_brisbane";
+service.hub = "ibm-q"
+service.group = "open"
+service.project = "main"
 
 %% 1. Enable the session and Sampler
 session = Session(service, backend);  
