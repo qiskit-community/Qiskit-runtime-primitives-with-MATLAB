@@ -65,7 +65,6 @@ classdef Maxcut < handle
         Pauli_Coeff   = string(coeff);
     end
 %%
-    
 function plot_results(G,bitstring_data,probability)
         
         N = numnodes(G);
