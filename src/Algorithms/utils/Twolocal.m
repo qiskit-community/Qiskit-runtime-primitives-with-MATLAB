@@ -12,15 +12,34 @@
 function circuit = Twolocal(circuitinfo,parameters)
     Gates = [];
     for i =1:circuitinfo.reps
-        if circuitinfo.entanglement=="linear"
-    gates = [
-             ryGate([1:circuitinfo.number_qubits], parameters((i-1)*circuitinfo.number_qubits+1:i*circuitinfo.number_qubits))
-             cxGate(1:circuitinfo.number_qubits-1, 2:circuitinfo.number_qubits)
-            ];
-    Gates = [Gates,gates'];
+        gates_rot = [];
+        for j=1:length(circuitinfo.rotation_blocks)
+            gate_str = circuitinfo.rotation_blocks(j)+'Gate';
+            Gates_block = str2func(gate_str)
+            gates_rot = [gates_rot, Gates_block([1:circuitinfo.number_qubits], parameters((i-1)*circuitinfo.number_qubits+1:i*circuitinfo.number_qubits))'];
         end
+        if circuitinfo.entanglement=="linear"
+            gates = [
+                     cxGate(1:circuitinfo.number_qubits-1, 2:circuitinfo.number_qubits)
+                    ];
+        elseif circuitinfo.entanglement=="pairwise"
+ 
+            gates = [
+                     cxGate(1:2:circuitinfo.number_qubits-1, 2:2:circuitinfo.number_qubits)
+                     cxGate(2:2:circuitinfo.number_qubits-1, 3:2:circuitinfo.number_qubits);
+                    ];
+
+        end
+        Gates = [Gates,gates_rot,gates'];
     end
-    final_rot = [ryGate([1:circuitinfo.number_qubits], parameters(circuitinfo.reps*circuitinfo.number_qubits+1:(circuitinfo.reps+1)*circuitinfo.number_qubits))]';
+
+    final_rot = [];
+    for j=1:length(circuitinfo.rotation_blocks)
+        gate_str = circuitinfo.rotation_blocks(j)+'Gate';
+        Gates_block = str2func(gate_str)
+        final_rot = [final_rot, Gates_block([1:circuitinfo.number_qubits], parameters((i-1)*circuitinfo.number_qubits+1:i*circuitinfo.number_qubits))'];
+    end
+    
     Gates  = [Gates, final_rot];
     circuit = quantumCircuit(Gates);
 end

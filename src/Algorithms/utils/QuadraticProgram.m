@@ -26,6 +26,7 @@ classdef QuadraticProgram < handle
  %%     
       function [Pauli_terms,Pauli_Coeff, Offset_value] = To_ising (Linear, Quadratic,constant)
     
+        %%% Step1:
         %%% Add the linear part to the diagonal elements of Quadratic
         %%% matrix since x^2=x for binary variables
         Q = Quadratic;
@@ -34,6 +35,7 @@ classdef QuadraticProgram < handle
         end
         %%% N would be the number of qubits
         N =size(Q,1);
+        %%% Step2:
         %%% Create III..I Pauli term to start and replace I with Z operator
         %%% if the (i,j) element inside Quadratix matrix is nonzero
         II_string = repmat('I', [1, N]);
@@ -57,7 +59,7 @@ classdef QuadraticProgram < handle
             end
             
         end 
-        
+        %%% Step3:
         %%% Calculate Wii coefficient using the weights of (i,j) index. 
         for i=1:N
             Wij = 0;
@@ -69,6 +71,7 @@ classdef QuadraticProgram < handle
             Wii(i) = Wij;
         end
         
+        %%% Step4:
         %%% Adding all the coefficients of the lower triangle to find the final
         %%% coefficient of Wij (if the coefficients are nonzero)
         k=1;
