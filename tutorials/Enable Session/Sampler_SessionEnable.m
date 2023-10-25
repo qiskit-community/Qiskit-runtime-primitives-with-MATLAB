@@ -27,11 +27,11 @@ apiToken = "MY_IBM_QUANTUM_TOKEN";
 service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
-service.Start_session = false; %set to true to enable Qiskit Runtime Session 
+service.Start_session = true; %set to true to enable Qiskit Runtime Session 
 backend="ibmq_qasm_simulator";
-service.hub = "your-hub"
-service.group = "your-group"
-service.project = "your-project"
+% service.hub = "your-hub"
+% service.group = "your-group"
+% service.project = "your-project"
 %% 1. Enable the session and Sampler
 session = Session(service, backend);  
 sampler = Sampler(session=session);
@@ -41,6 +41,11 @@ c1 = quantumCircuit([hGate(1) cxGate(1,2)]);
 
 %% 3. Execute the circuit using sampler primititve
 job1 = sampler.run(c1);
+
+if isfield(job1,'session_id')
+    sampler.options.service.session_id = job1.session_id;
+end
+
 
 %% 4. Retrieve the results back
 Results = sampler.Results(job1.id);

@@ -40,7 +40,11 @@ classdef Job
                url = var.urljob_crn;
             
                if isempty(hubinfo.session_id)
-                    start_session = true;
+                    if hubinfo.Start_session==0
+                        start_session = false;
+                    else 
+                        start_session = true;
+                    end
                     txt = '{"program_id":"'+hubinfo.program_id+'","start_session":'+start_session+', "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}';
                else
                     txt = '{"program_id":"'+hubinfo.program_id+'","session_id":"'+hubinfo.session_id+'", "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}';
@@ -58,7 +62,11 @@ classdef Job
                url = var.urljob_iqp;
 
                if isempty(hubinfo.session_id)
-                    start_session = true;
+                   if hubinfo.Start_session==0
+                        start_session = false;
+                   else 
+                        start_session = true;
+                   end
                     txt = '{"program_id":"'+hubinfo.program_id+'","hub":"'+hubinfo.hub+'","group":"'+hubinfo.group+'","start_session":'+start_session+',"project":"'+hubinfo.project+'", "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}';
                else
                     txt = '{"program_id":"'+hubinfo.program_id+'","hub":"'+hubinfo.hub+'","group":"'+hubinfo.group+'","session_id":"'+hubinfo.session_id+'","project":"'+hubinfo.project+'", "tags": [],"backend":"'+hubinfo.backend+'","params":'+params+'}';
@@ -72,7 +80,10 @@ classdef Job
             
             job_info.id = job.id;
             job_info.backend = job.backend;
-            job_info.session_id = job.session_id;
+            if isfield(job,'session_id')
+                job_info.session_id = job.session_id;
+            end
+
       end
 %%
       function results = retrieveResults(varargin)

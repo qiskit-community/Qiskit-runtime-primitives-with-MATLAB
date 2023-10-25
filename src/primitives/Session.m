@@ -23,9 +23,9 @@ classdef Session
             MAX_ST_LENGTH = 16;
             stLength = randi([1,length(symbols)],MAX_ST_LENGTH,1);
             
-            if service.Start_session ==1
-                obj.service.session_id = symbols(stLength);
-            end
+            % if service.Start_session ==1
+            %     % obj.service.session_id = symbols(stLength);
+            % end
             if ~isempty(backend)
                 obj.service.backend = backend
             end
