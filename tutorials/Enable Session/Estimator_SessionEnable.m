@@ -28,7 +28,7 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 
 %%
 service.program_id = "estimator";
-service.Start_session = false;
+service.Start_session = true;
 backend="ibmq_qasm_simulator";
 
 %% 1. Enable the session and Estimator
@@ -46,11 +46,14 @@ hamiltonian.Coeffs = coeffs;
 
 
 %% 2. Build Bell State circuit
-c1 = quantumCircuit([hGate(1) cxGate(1,2)]);
+c1 = quantumCircuit([hGate(1) cxGate(1,2)]); 
 
 %% 3. Execute the circuit using estimator primititve
 job1 = estimator.run(c1,hamiltonian);
 
+if isfield(job1,'session_id')
+    estimator.options.service.session_id = job1.session_id;
+end
 %% 4. Retrieve the results back
 Results = estimator.Results(job1.id);
 Results

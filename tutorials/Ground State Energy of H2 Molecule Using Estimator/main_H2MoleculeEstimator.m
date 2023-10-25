@@ -13,15 +13,16 @@
 clc;
 clear;
 close all;
+clearvars -global;
 
+global session_id;
 %% Setup IBM Quantum cloud credentials
-
+ 
 % channel = "ibm_cloud";
 % apiToken = 'MY_IBM_CLOUD_API_KEY';
 % crn_service = 'MY_IBM_CLOUD_CRN';
 % 
 % service = QiskitRuntimeService(channel,apiToken,crn_service);
-
 
 %% Setup IBM Quantum Platform credentials
 channel = "ibm_quantum";
@@ -30,7 +31,7 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 
 %%
 service.program_id = "estimator";
-service.Start_session = true;
+service.Start_session = false;
 
 backend="ibmq_qasm_simulator"; 
 
@@ -52,6 +53,7 @@ circuit.reps=4;
 circuit.entanglement = "linear";
 circuit.number_qubits = strlength(hydrogen_Pauli(1));
 circuit.num_parameters = (circuit.reps+1)*circuit.number_qubits;
+circuit.rotation_blocks = ["ry", "ry"];
 
 %% Arguments for the optimizer 
 arg.hamiltonian = hamiltonian;
@@ -82,16 +84,24 @@ rng default %% For reproducibility
 
 fprintf('Ground state energy of H2 molecule for bonding distance 0.72 Angstrom: [ %s ]\n', minEnergy);
 
-
 %% Define the cost function to calculate the expectation value of the derived Hamiltonian
 function [energy] = cost_function(parameters,arg)    
 
+    global session_id
     % Construct the variational circuit 
     ansatz = Twolocal(arg.circuit, parameters);
 
-    estimator = arg.estimator;
-    job       = estimator.run(ansatz,arg.hamiltonian);
+    estimator = arg.estimator; 
 
+    if estimator.options.service.Start_session
+        estimator.options.service.session_id = session_id;
+    end
+
+    job       = estimator.run(ansatz,arg.hamiltonian);
+    
+    if isfield(job,'session_id')
+        session_id = job.session_id;
+    end
     %%%% Retrieve the results back
     results   = estimator.Results(job.id);
     energy    = results.values;

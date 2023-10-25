@@ -11,6 +11,9 @@
 clc;
 clear;
 close all;
+clearvars -global;
+
+global session_id;
 %% Generate a graph
 s = [1 1 2 3 3 4];
 t = [2 5 3 4 5 5];
@@ -110,13 +113,22 @@ Maxcut.plot_results(G,bitstring_data,probabilities);
 
 %% Define the cost function to calculate the expectation value of the retreived bit-strings
 function energy = cost_function (parameters,arg)
-        
+    
+    global session_id    
     %%%% Construct the variational circuit 
     ansatz = Twolocal(arg.circuit, parameters);
     %%%% Run Sampler primitive
     sampler = Sampler(session=arg.sampler.options);
+    if sampler.options.service.Start_session
+        sampler.options.service.session_id = session_id;
+    end
+
     job     = sampler.run(ansatz,arg.sampler.options.service);
     %%%% Retrieve the results back
+    if isfield(job,'session_id')
+        session_id = job.session_id;
+    end
+    
     results = sampler.Results(job.id);
     
     %%%%extract the Bitstring

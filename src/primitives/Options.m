@@ -29,7 +29,6 @@ classdef Options
         Observables = varargin{1,3};
 
         qasm = generateQASM(circuit);
-        
         options.circuits = {qasm};
         options.circuit_indices = {0};
         options.parameter_values = {[]};
