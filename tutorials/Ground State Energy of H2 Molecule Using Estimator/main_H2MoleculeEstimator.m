@@ -31,7 +31,7 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 
 %%
 service.program_id = "estimator";
-service.Start_session = false;
+service.Start_session = true;
 
 backend="ibmq_qasm_simulator"; 
 
@@ -53,7 +53,7 @@ circuit.reps=4;
 circuit.entanglement = "linear";
 circuit.number_qubits = strlength(hydrogen_Pauli(1));
 circuit.num_parameters = (circuit.reps+1)*circuit.number_qubits;
-circuit.rotation_blocks = ["ry", "ry"];
+circuit.rotation_blocks = ["ry"];
 
 %% Arguments for the optimizer 
 arg.hamiltonian = hamiltonian;
@@ -96,14 +96,26 @@ function [energy] = cost_function(parameters,arg)
     if estimator.options.service.Start_session
         estimator.options.service.session_id = session_id;
     end
-
-    job       = estimator.run(ansatz,arg.hamiltonian);
     
-    if isfield(job,'session_id')
-        session_id = job.session_id;
+    status = '~'; %anything not empty so the loop starts
+    while ~isempty(status)
+        job       = estimator.run(ansatz,arg.hamiltonian);
+        
+        if isfield(job,'session_id')
+            session_id = job.session_id;
+        end
+        %%%% Retrieve the results back
+        results   = estimator.Results(job.id);
+        status = results.status;
+        Numberof_Failed = Numberof_Failed+1;
+        if Numberof_Failed==10
+            display('The submitted Job Failed. Please check your circuit or the provided parameters');
+            break;
+        end
+        if results.status == "Completed"
+            energy    = results.values;
+            break;
+        end
     end
-    %%%% Retrieve the results back
-    results   = estimator.Results(job.id);
-    energy    = results.values;
 end
 

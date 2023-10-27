@@ -130,11 +130,12 @@ classdef Job
         
                 response = eraseBetween(response, 1, "{");
                 results = jsondecode(response);
-                
+                results.status = status;
                 break;
             elseif status == "Failed"
                 status
-                results = "The job status is Failed";
+                display("The job status is Failed");
+                results.status = status;
                 break;
             end
             pause(1);
