@@ -33,24 +33,54 @@ classdef Options
         options.circuit_indices = {0};
         options.parameter_values = {[]};
         
-        if id
-            observables = {};
-            observables.x__type__= "settings";
-            observables.x__module__= "qiskit.quantum_info.operators.symplectic.sparse_pauli_op";
-            observables.x__class__= "SparsePauliOp";
+        % if id
+        % 
+        %     observables.x__type__= "settings";
+        %     observables.x__module__= "qiskit.quantum_info.operators.symplectic.sparse_pauli_op";
+        %     observables.x__class__= "SparsePauliOp";
+        % 
+        %     observables.x__value__.data.x__type__ = "settings";
+        %     observables.x__value__.data.x__module__ = "qiskit.quantum_info.operators.symplectic.pauli_list";
+        %     observables.x__value__.data.x__class__ = "PauliList";
+        %     observables.x__value__.data.x__value__.data = Observables.Pauli_Term;
+        % 
+        %     observables.x__value__.coeffs.x__type__ = "ndarray";
+        %     observables.x__value__.coeffs.x__value__ = Observables.Coeffs;
+        %     options.observables = {[observables]};
+        %     options.observable_indices = {0};
+        % 
+        % end
+        
+          if id
+            observables = containers.Map();
+            observables('__type__') = "settings";
+            observables('__module__') = "qiskit.quantum_info.operators.symplectic.sparse_pauli_op";
+            observables('__class__') = "SparsePauliOp";
             
-            observables.x__value__.data.x__type__ = "settings";
-            observables.x__value__.data.x__module__ = "qiskit.quantum_info.operators.symplectic.pauli_list";
-            observables.x__value__.data.x__class__ = "PauliList";
-            observables.x__value__.data.x__value__.data = Observables.Pauli_Term;
+            observables("__value__") = containers.Map();
+            observable_value = observables("__value__");
             
-            observables.x__value__.coeffs.x__type__ = "ndarray";
-            observables.x__value__.coeffs.x__value__ = Observables.Coeffs;
+            observable_value("data") = containers.Map();
+            observable_value_data = observable_value("data");
+            
+            
+            observable_value_data("__type__") = "settings";
+            observable_value_data("__module__") = "qiskit.quantum_info.operators.symplectic.pauli_list";
+            observable_value_data("__class__") = "PauliList";
+            
+            observable_value_data("__value__") = containers.Map();
+            observable_value_data_value = observable_value_data("__value__");
+            observable_value_data_value("data") = Observables.Pauli_Term;
+            
+            
+            observable_value("coeffs") = containers.Map();
+            observable_value_coeffs = observable_value("coeffs");
+            observable_value_coeffs("__type__") = "ndarray";
+            observable_value_coeffs("__value__") = Observables.Coeffs;
             options.observables = {[observables]};
             options.observable_indices = {0};
       
         end
-        
         options.resilience_settings.level = 1;
         options.transpilation_settings.optimization_settings.level = 3;
         options.run_options.shots = 100;
@@ -68,10 +98,7 @@ classdef Options
         options.run_options.noise_model = NaN;
         options.run_options.seed_simulator = NaN;
         
-        txt = jsonencode(options);
-        txt = strrep(txt,'"x__','"__');
-        options = txt;
-    
+
     end
    end
 end
