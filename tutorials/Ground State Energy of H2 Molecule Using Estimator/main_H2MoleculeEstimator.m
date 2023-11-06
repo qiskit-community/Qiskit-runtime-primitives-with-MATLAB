@@ -31,7 +31,7 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 
 %%
 service.program_id = "estimator";
-service.Start_session = false;
+service.Start_session = true;
 
 backend="ibmq_qasm_simulator"; 
 
@@ -53,7 +53,7 @@ circuit.reps=4;
 circuit.entanglement = "linear";
 circuit.number_qubits = strlength(hydrogen_Pauli(1));
 circuit.num_parameters = (circuit.reps+1)*circuit.number_qubits;
-circuit.rotation_blocks = ["ry", "ry"];
+circuit.rotation_blocks = ["ry"];
 
 %% Arguments for the optimizer 
 arg.hamiltonian = hamiltonian;
@@ -106,4 +106,3 @@ function [energy] = cost_function(parameters,arg)
     results   = estimator.Results(job.id);
     energy    = results.values;
 end
-

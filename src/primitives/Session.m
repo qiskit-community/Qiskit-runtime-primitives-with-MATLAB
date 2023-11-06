@@ -27,7 +27,7 @@ classdef Session
             %     % obj.service.session_id = symbols(stLength);
             % end
             if ~isempty(backend)
-                obj.service.backend = backend
+                obj.service.backend = backend;
             end
        end
        % function obj = set.service(obj,val)

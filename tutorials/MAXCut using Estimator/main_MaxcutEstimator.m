@@ -139,4 +139,3 @@ function [energy] = cost_function(parameters,arg)
     results   = estimator.Results(job.id);
     energy    = results.values;
 end
-
