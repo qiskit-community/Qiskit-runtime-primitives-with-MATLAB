@@ -41,6 +41,5 @@ function circuit = Twolocal(circuitinfo,parameters)
     end
     
     Gates  = [Gates, final_rot];
-    % Gates = [Gates xGate(5)' xGate(9)'];
     circuit = quantumCircuit(Gates);
 end
