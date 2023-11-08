@@ -67,7 +67,6 @@ classdef Maxcut < handle
 %%
 function plot_results(G,bitstring_data,probability)
         
-        N = numnodes(G);
         figure()
         bar(categorical(bitstring_data),probability)
         xlabel('Bitstrings')
@@ -93,16 +92,19 @@ function plot_results(G,bitstring_data,probability)
                 index = [index i];
             end
         end
-        figure
-
-        h = plot(G);
         
-        highlight(h,index,'NodeColor','g')
-        highlight(h,1:N,'MarkerSize',20)
-        
-        end
+
+        if ~isempty(G)
+            figure
+            N = numnodes(G);
+            h = plot(G);
+            
+            highlight(h,index,'NodeColor','g')
+            highlight(h,1:N,'MarkerSize',20)
+        end  
+    end
 
 
-   end
+end
 end
 
