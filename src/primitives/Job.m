@@ -52,8 +52,8 @@ classdef Job
              
                 statuscode = int32(r.StatusCode);
                 if r.StatusCode ~= matlab.net.http.StatusCode.OK
-                    % disp(["Error Code: ", string(statuscode), ': ', getReasonPhrase(getClass(r.StatusCode)),': ',getReasonPhrase(r.StatusCode)])
-                    % disp(r.Body.Data.errors)
+                    disp(["Error Code: ", string(statuscode), ': ', getReasonPhrase(getClass(r.StatusCode)),': ',getReasonPhrase(r.StatusCode)])
+                    disp(r.Body.Data.errors)
                 end
 
                 response = r.Body.Data;
