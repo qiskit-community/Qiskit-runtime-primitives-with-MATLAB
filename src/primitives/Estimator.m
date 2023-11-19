@@ -20,7 +20,7 @@ classdef Estimator
    methods
 
        function obj = Estimator(session,options)
-            options.service.program_id = "estimator";
+            session.service.program_id = "estimator";
             obj.session = session;
             obj.options = options;
 
@@ -28,10 +28,10 @@ classdef Estimator
 
        function jobinfo = run(varargin)
             circuit     = varargin{1,2};
-            hubinfo     = varargin{1,1}.options.service;
+            hubinfo    = varargin{1, 1}.session.service;
             hamiltonian = varargin{1,3};
 
-            params = Options.SetOptions(circuit,1, hamiltonian);
+            params = varargin{1, 1}.options.SetOptions(circuit,1, hamiltonian);
             %% Run the circuit on IBM Quantum Estimator primitive
             %%%% Submit the job
             jobinfo = Job.submitJob(params, hubinfo);
@@ -40,7 +40,7 @@ classdef Estimator
       
       function result = Results(varargin)
         job_id      = varargin{1,2};
-        service     = varargin{1,1}.options.service;
+        service  = varargin{1, 1}.session.service;
 
         result = Job.retrieveResults(job_id, service);
 

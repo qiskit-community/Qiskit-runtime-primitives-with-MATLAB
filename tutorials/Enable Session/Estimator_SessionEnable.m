@@ -31,9 +31,16 @@ service.program_id = "estimator";
 service.Start_session = true;
 backend="ibmq_qasm_simulator";
 
+service.hub = "ibm-q-internal";
+service.group = "deployed";
+service.project = "default";
+
 %% 1. Enable the session and Estimator
 session = Session(service, backend);  
-estimator = Estimator(session=session);
+
+options = Options();
+options.transpilation_settings.skip_transpilation = false;
+estimator = Estimator(session,options);
 
 %% 1. Mapping the problem (H2 molecule) to qubits/Quantum Hamiltonian
 %%% The Hamiltonian (Pauli terms and coefficients) for a bonding distance
@@ -52,7 +59,7 @@ c1 = quantumCircuit([hGate(1) cxGate(1,2)]);
 job1 = estimator.run(c1,hamiltonian);
 
 if isfield(job1,'session_id')
-    estimator.options.service.session_id = job1.session_id;
+    estimator.session.service.session_id = jo1.session_id;
 end
 %% 4. Retrieve the results back
 Results = estimator.Results(job1.id);

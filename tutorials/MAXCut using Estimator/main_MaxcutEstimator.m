@@ -47,12 +47,18 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 %%
 service.program_id = "estimator";
 service.Start_session = true;
+backend="ibmq_qasm_simulator";
 
-backend="ibmq_qasm_simulator"; 
+service.hub = "ibm-q-internal";
+service.group = "deployed";
+service.project = "default";
 
-%% Enable the session and Estimator
+%% 1. Enable the session and Estimator
 session = Session(service, backend);  
-estimator = Estimator(session=session);
+
+options = Options();
+options.transpilation_settings.skip_transpilation = false;
+estimator = Estimator(session,options);
 
 %% 1. Mapping the problem (Maxcut problem) to qubits/Quantum Hamiltonian 
 %%% Convert the Maxcut problem into an Ising Hamiltonian
@@ -62,8 +68,9 @@ estimator = Estimator(session=session);
 circuit.reps=2;
 circuit.entanglement = "linear";
 circuit.number_qubits = numnodes(G);
-circuit.num_parameters = (circuit.reps+1)*circuit.number_qubits;
-circuit.rotation_blocks = ["ry", "rz"];
+circuit.rotation_blocks = ["ry","rx"];
+circuit.num_parameters = ((circuit.reps+1)*size(circuit.rotation_blocks,2))*circuit.number_qubits;
+
 
 %% Arguments for the optimizer 
 arg.hamiltonian = hamiltonian;
@@ -80,7 +87,7 @@ max_iter = 80;
 lower_bound = repmat(-2*pi,circuit.num_parameters,1);
 upper_bound = repmat( 2*pi,circuit.num_parameters,1);
 
-options = optimoptions("surrogateopt",...
+op_options = optimoptions("surrogateopt",...
     "MaxFunctionEvaluations",max_iter, ...
     "PlotFcn","optimplotfval",...
     "InitialPoints",x0);
@@ -90,7 +97,7 @@ options = optimoptions("surrogateopt",...
 
 rng default %% For reproducibility 
 
-[angles,minEnergy] = surrogateopt(cost_func,lower_bound,upper_bound,options);
+[angles,minEnergy] = surrogateopt(cost_func,lower_bound,upper_bound,op_options);
 
 %% 4. Find the solution which is the bitstring with the highest probability
 %%% We need to run the circuit with the acheived optimized parameters usng
@@ -98,9 +105,9 @@ rng default %% For reproducibility
 
 ansatz = Twolocal(circuit, angles);
 
-sampler = Sampler (session=session);
+sampler = Sampler (session,options);
 
-job = sampler.run(ansatz,sampler.options.service);
+job = sampler.run(ansatz);
 results = sampler.Results(job.id);
 %%% extract the bitstring
 string_data = string(fieldnames(results.quasi_dists));
@@ -114,7 +121,7 @@ fprintf('The quantum solution for maxcut is: [ %s ]\n', bitstring_maxprobability
 
 %%%% plot the results and color the graph using the received bit-string
 %%%% (solution)
-Maxcut.plot_results(G,bitstring_data,probabilities);
+Maxcut.plot_results(G,bitstring_data,probabilities, 'g');
 
 
 %% Define the cost function to calculate the expectation value of the derived Hamiltonian
@@ -126,8 +133,8 @@ function [energy] = cost_function(parameters,arg)
 
     estimator = arg.estimator; 
 
-    if estimator.options.service.Start_session
-        estimator.options.service.session_id = session_id;
+    if estimator.session.service.Start_session
+        estimator.session.service.session_id = session_id;
     end
 
     job       = estimator.run(ansatz,arg.hamiltonian);
