@@ -48,7 +48,7 @@ estimator = Estimator(session,options);
 %% 1. Mapping the problem (H2 molecule) to qubits/Quantum Hamiltonian
 %%% The Hamiltonian (Pauli terms and coefficients) for a bonding distance
 %%% of 0.72 Angstrom will be:
-hydrogen_Pauli = ["III","IIZ","ZII","IZZ","IXX"];
+hydrogen_Pauli = ["II","IZ","ZI","ZZ","XX"];
 coeffs = string([-1.0523732, 0.39793742, -0.3979374 , -0.0112801, 0.18093119]);
 
 hamiltonian.Pauli_Term = hydrogen_Pauli;
