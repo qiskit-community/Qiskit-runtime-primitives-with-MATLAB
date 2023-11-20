@@ -47,11 +47,11 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 
 %%
 service.Start_session = true; %set to true to enable Qiskit Runtime Session 
-% backend="ibm_lagos";
-backend="ibmq_qasm_simulator";
-service.hub = "ibm-q-internal";
-service.group = "deployed";
-service.project = "default";
+backend="ibm_lagos";
+
+% service.hub = "hub";
+% service.group = "group";
+% service.project = "project";
 %% 1. Enable the session and Sampler
 session = Session(service, backend);
 

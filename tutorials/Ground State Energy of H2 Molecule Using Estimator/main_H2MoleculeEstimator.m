@@ -32,11 +32,11 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 %%
 service.program_id = "estimator";
 service.Start_session = true;
-backend="ibmq_qasm_simulator";
+backend="ibm_lagos";
 
-service.hub = "ibm-q-internal";
-service.group = "deployed";
-service.project = "default";
+% service.hub = "hub";
+% service.group = "group";
+% service.project = "project";
 
 %% 1. Enable the session and Estimator
 session = Session(service, backend);  
