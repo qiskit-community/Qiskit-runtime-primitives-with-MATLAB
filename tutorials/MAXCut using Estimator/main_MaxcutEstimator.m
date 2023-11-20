@@ -49,9 +49,9 @@ service.program_id = "estimator";
 service.Start_session = true;
 backend="ibm_lagos";
 
-% service.hub = "hub";
-% service.group = "group";
-% service.project = "project";
+% service.hub = "your-hub"
+% service.group = "your-group"
+% service.project = "your-project"
 
 %% 1. Enable the session and Estimator
 session = Session(service, backend);  
