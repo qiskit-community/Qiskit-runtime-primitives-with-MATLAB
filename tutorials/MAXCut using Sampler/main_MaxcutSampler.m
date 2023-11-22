@@ -46,19 +46,25 @@ apiToken = "MY_IBM_QUANTUM_TOKEN";
 service = QiskitRuntimeService(channel,apiToken,[]);
 
 %%
-service.program_id = "sampler";
-service.Start_session = false;
-backend="ibmq_qasm_simulator"; 
+service.Start_session = true; %set to true to enable Qiskit Runtime Session 
+backend="ibm_lagos";
 
-%% Enable the session and Estimator
-session = Session(service, backend);  
-sampler = Sampler(session=session);
+% service.hub = "your-hub"
+% service.group = "your-group"
+% service.project = "your-project"
+%% 1. Enable the session and Sampler
+session = Session(service, backend);
+
+options = Options();
+options.transpilation_settings.skip_transpilation = true;
+sampler = Sampler(session,options);
 
 %% 1. Choosing the ansatz circuit/s
 circuit.reps=4;
 circuit.entanglement = "linear";
 circuit.number_qubits = numnodes(G);
-circuit.num_parameters = (circuit.reps+1)*circuit.number_qubits;
+circuit.rotation_blocks = ["ry","rx"];
+circuit.num_parameters = ((circuit.reps+1)*size(circuit.rotation_blocks,2))*circuit.number_qubits;
 
 %% Arguments for the optimizer 
 arg.circuit     = circuit;
@@ -76,7 +82,7 @@ lower_bound = repmat(-2*pi,circuit.num_parameters,1);
 upper_bound = repmat( 2*pi,circuit.num_parameters,1);
 
 
-options = optimoptions("surrogateopt",...
+op_options = optimoptions("surrogateopt",...
     "MaxFunctionEvaluations",max_iter, ...
     "PlotFcn","optimplotfval",...
     "InitialPoints",x0);
@@ -86,7 +92,7 @@ options = optimoptions("surrogateopt",...
 
 rng default %% For reproducibility
 
-[angles,minEnergy] = surrogateopt(cost_func,lower_bound,upper_bound,options);
+[angles,minEnergy] = surrogateopt(cost_func,lower_bound,upper_bound,op_options);
 
 %% 3. Find the solution which is the bitstring with the highest probability
 %%% We need to run the circuit with the acheived optimized parameters usng
@@ -94,7 +100,7 @@ rng default %% For reproducibility
 
 ansatz = Twolocal(circuit, angles);
 
-job = sampler.run(ansatz,sampler.options.service);
+job = sampler.run(ansatz);
 results = sampler.Results(job.id);
 %%% extract the Bitstring
 string_data = string(fieldnames(results.quasi_dists));
@@ -108,7 +114,7 @@ fprintf('The quantum solution for maxcut is: [ %s ]\n', bitstring_maxprobability
 
 %%%% plot the results and color the graph using the received bit-string
 %%%% (solution)
-Maxcut.plot_results(G,bitstring_data,probabilities);
+Maxcut.plot_results(G,bitstring_data,probabilities, 'c');
 
 
 %% Define the cost function to calculate the expectation value of the retreived bit-strings
@@ -118,12 +124,12 @@ function energy = cost_function (parameters,arg)
     %%%% Construct the variational circuit 
     ansatz = Twolocal(arg.circuit, parameters);
     %%%% Run Sampler primitive
-    sampler = Sampler(session=arg.sampler.options);
-    if sampler.options.service.Start_session
-        sampler.options.service.session_id = session_id;
+    sampler = arg.sampler;
+    if sampler.session.service.Start_session
+        sampler.session.service.session_id = session_id;
     end
 
-    job     = sampler.run(ansatz,arg.sampler.options.service);
+    job     = sampler.run(ansatz);
     %%%% Retrieve the results back
     if isfield(job,'session_id')
         session_id = job.session_id;

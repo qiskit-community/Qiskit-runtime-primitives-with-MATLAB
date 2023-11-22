@@ -29,14 +29,18 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
 service.Start_session = true; %set to true to enable Qiskit Runtime Session 
-backend="ibmq_qasm_simulator";
-service.hub = "your-hub"
-service.group = "your-group"
-service.project = "your-project"
+backend="ibm_lagos";
+
+% service.hub = "your-hub"
+% service.group = "your-group"
+% service.project = "your-project"
 %% 1. Enable the session and Sampler
-session = Session(service, backend);  
-sampler = Sampler(session=session);
-  
+session = Session(service, backend);
+
+options = Options();
+options.transpilation_settings.skip_transpilation = true;
+sampler = Sampler(session,options);
+
 %% 2. Build Bell State circuit
 c1 = quantumCircuit([hGate(1) cxGate(1,2)]);
 
@@ -44,7 +48,7 @@ c1 = quantumCircuit([hGate(1) cxGate(1,2)]);
 job1 = sampler.run(c1);
 
 if isfield(job1,'session_id')
-    sampler.options.service.session_id = job1.session_id;
+    sampler.session.service.session_id = job1.session_id;
 end
 
 

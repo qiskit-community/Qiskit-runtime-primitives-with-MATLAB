@@ -65,10 +65,9 @@ classdef Maxcut < handle
         Pauli_Coeff   = string(coeff);
     end
 %%
-function plot_results(G,bitstring_data,probability)
+function plot_results(G,bitstring_data,probability,color)
         
-        figure()
-        bar(categorical(bitstring_data),probability)
+        bar(categorical(bitstring_data),probability,color)
         xlabel('Bitstrings')
         ylabel('Probabilities')
         title('Returned distribution from Qiskit Runtime Sampler primitive')

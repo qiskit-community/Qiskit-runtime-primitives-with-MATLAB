@@ -32,12 +32,18 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 %%
 service.program_id = "estimator";
 service.Start_session = true;
+backend="ibm_lagos";
 
-backend="ibmq_qasm_simulator"; 
+% service.hub = "your-hub"
+% service.group = "your-group"
+% service.project = "your-project"
 
-%% Enable the session and Estimator
+%% 1. Enable the session and Estimator
 session = Session(service, backend);  
-estimator = Estimator(session=session);
+
+options = Options();
+options.transpilation_settings.skip_transpilation = false;
+estimator = Estimator(session,options);
 
 %% 1. Mapping the problem (H2 molecule) to qubits/Quantum Hamiltonian
 %%% The Hamiltonian (Pauli terms and coefficients) for a bonding distance
@@ -50,10 +56,11 @@ hamiltonian.Coeffs = coeffs;
 
 %% 2. Choosing the ansatz circuit/s
 circuit.reps=4;
-circuit.entanglement = "linear";
+circuit.entanglement = "pairwise";
 circuit.number_qubits = strlength(hydrogen_Pauli(1));
-circuit.num_parameters = (circuit.reps+1)*circuit.number_qubits;
-circuit.rotation_blocks = ["ry"];
+circuit.rotation_blocks = ["ry","rx"];
+circuit.num_parameters = ((circuit.reps+1)*size(circuit.rotation_blocks,2))*circuit.number_qubits;
+
 
 %% Arguments for the optimizer 
 arg.hamiltonian = hamiltonian;
@@ -70,7 +77,7 @@ max_iter = 40;
 lower_bound = repmat(-2*pi,circuit.num_parameters,1);
 upper_bound = repmat( 2*pi,circuit.num_parameters,1);
 
-options = optimoptions("surrogateopt",...
+op_options = optimoptions("surrogateopt",...
     "MaxFunctionEvaluations",max_iter, ...
     "PlotFcn","optimplotfval",...
     "InitialPoints",x0);
@@ -80,7 +87,7 @@ options = optimoptions("surrogateopt",...
 
 rng default %% For reproducibility
 
-[angles,minEnergy] = surrogateopt(cost_func,lower_bound,upper_bound,options);
+[angles,minEnergy] = surrogateopt(cost_func,lower_bound,upper_bound,op_options);
 
 fprintf('Ground state energy of H2 molecule for bonding distance 0.72 Angstrom: [ %s ]\n', minEnergy);
 
@@ -93,8 +100,8 @@ function [energy] = cost_function(parameters,arg)
 
     estimator = arg.estimator; 
 
-    if estimator.options.service.Start_session
-        estimator.options.service.session_id = session_id;
+    if estimator.session.service.Start_session
+        estimator.session.service.session_id = session_id;
     end
 
     job       = estimator.run(ansatz,arg.hamiltonian);

@@ -10,28 +10,60 @@
 
 
 classdef Options 
-   properties(SetAccess = private)
-       circuits,
-       circuit_indices,
-       parameters,
-       parameter_values,
-       observables,
+   properties
+       % circuits,
+       % circuit_indices,
+       % parameters,
+       % parameter_values,
+       % observables,
        resilience_settings,
        transpilation_settings,
        run_options,
+
    end
-   methods(Static)
+   methods(Access=public)
        
+       function obj = Options (varargin)
+            obj.resilience_settings.level = 1;
+    
+            obj.run_options.shots = 20000;
+            obj.transpilation_settings.optimization_settings.level = 3;
+            obj.transpilation_settings.skip_transpilation = false;
+            obj.transpilation_settings.approximation_degree = NaN;
+            obj.transpilation_settings.initial_layout = NaN;
+            obj.transpilation_settings.layout_method = NaN;
+            obj.transpilation_settings.routing_method = NaN;
+            obj.transpilation_settings.coupling_map = NaN;
+            obj.transpilation_settings.basis_gates = NaN;
+            obj.resilience_settings.noise_amplifier = "noise_amplifier";
+            obj.resilience_settings.noise_factors = [1,3,5];
+            obj.resilience_settings.extrapolator = "LinearExtrapolator";
+            obj.run_options.init_qubits = true;
+            obj.run_options.noise_model = NaN;
+            obj.run_options.seed_simulator = NaN;
+
+
+   end
  %%
     function options = SetOptions (varargin)
-        circuit     = varargin{1,1};
-        id          = varargin{1, 2};
-        Observables = varargin{1,3};
+        options_params = varargin{1,1};
+        circuit     = varargin{1,2};
+        id          = varargin{1, 3};
+        Observables = varargin{1,4};
+        
 
-        qasm = generateQASM(circuit);
-        options.circuits = {qasm};
-        options.circuit_indices = {0};
-        options.parameter_values = {[]};
+        for i = 1: length(circuit)
+            qasm(i) = generateQASM(circuit(i));
+        end
+  
+        options.circuits = cellstr(qasm);
+        if length(circuit)==1
+            options.circuit_indices = {0};
+            options.parameter_values = {[]};
+        else
+            options.circuit_indices = 0:length(circuit)-1;
+            options.parameter_values = cell(1,length(circuit));
+        end
        
         if id
             observables = containers.Map();
@@ -62,22 +94,22 @@ classdef Options
             options.observable_indices = {0};
       
         end
-        options.resilience_settings.level = 1;
-        options.transpilation_settings.optimization_settings.level = 3;
-        options.run_options.shots = 100;
-        options.transpilation_settings.skip_transpilation = false;
-        options.transpilation_settings.approximation_degree = NaN;
-        options.transpilation_settings.initial_layout = NaN;
-        options.transpilation_settings.layout_method = NaN;
-        options.transpilation_settings.routing_method = NaN;
-        options.transpilation_settings.coupling_map = NaN;
-        options.transpilation_settings.basis_gates = NaN;
-        options.resilience_settings.noise_amplifier = "TwoQubitAmplifier";
-        options.resilience_settings.noise_factors = [1,3,5];
-        options.resilience_settings.extrapolator = "LinearExtrapolator";
-        options.run_options.init_qubits = true;
-        options.run_options.noise_model = NaN;
-        options.run_options.seed_simulator = NaN;
+        options.resilience_settings.level = options_params.resilience_settings.level ;
+        options.transpilation_settings.optimization_settings.level = options_params.transpilation_settings.optimization_settings.level;
+        options.run_options.shots = options_params.run_options.shots;
+        options.transpilation_settings.skip_transpilation = options_params.transpilation_settings.skip_transpilation;
+        options.transpilation_settings.approximation_degree = options_params.transpilation_settings.approximation_degree ;
+        options.transpilation_settings.initial_layout = options_params.transpilation_settings.initial_layout;
+        options.transpilation_settings.layout_method = options_params.transpilation_settings.layout_method;
+        options.transpilation_settings.routing_method = options_params.transpilation_settings.routing_method;
+        options.transpilation_settings.coupling_map = options_params.transpilation_settings.coupling_map;
+        options.transpilation_settings.basis_gates = options_params.transpilation_settings.basis_gates;
+        options.resilience_settings.noise_amplifier = options_params.resilience_settings.noise_amplifier;
+        options.resilience_settings.noise_factors = options_params.resilience_settings.noise_factors;
+        options.resilience_settings.extrapolator = options_params.resilience_settings.extrapolator;
+        options.run_options.init_qubits = options_params.run_options.init_qubits;
+        options.run_options.noise_model = options_params.run_options.noise_model ;
+        options.run_options.seed_simulator = options_params.run_options.seed_simulator;
         
 
     end

@@ -19,7 +19,7 @@ classdef Sampler
    methods
 
        function obj = Sampler(session,options)
-            options.service.program_id = "sampler";
+            session.service.program_id = "sampler";
             obj.session = session;
             obj.options = options;
        end
@@ -27,10 +27,11 @@ classdef Sampler
  %%
        function jobinfo = run(varargin)
             circuit    = varargin{1,2};
-            hubinfo    = varargin{1,1}.options.service;
-
+            hubinfo    = varargin{1, 1}.session.service;
+            
+            
             %%%%%% Run the circuit on IBM Quantum Sampler program
-            params = Options.SetOptions(circuit,0,[]);
+            params = varargin{1, 1}.options.SetOptions(circuit,0,[]);
             %%%% Submit the job
             jobinfo = Job.submitJob(params, hubinfo);
 
@@ -38,7 +39,7 @@ classdef Sampler
  %%     
       function result = Results(varargin)
             job_id = varargin{1,2};
-            service  = varargin{1, 1}.options.service;
+            service  = varargin{1, 1}.session.service;
 
             result = Job.retrieveResults(job_id, service);
 
