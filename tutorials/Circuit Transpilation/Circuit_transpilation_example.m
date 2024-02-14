@@ -15,7 +15,7 @@ c1 = quantumCircuit([hGate(1) cxGate(1,2)]);
 
 qasm= generateQASM(c1);
 
-%% Parameters for the transpilerService
+%% Parameters for the transpilerService, this would be optional input to the TranspilerService 
 params.ai = true;
 params.optimization_level = 2;
 params.coupling_map = [];
