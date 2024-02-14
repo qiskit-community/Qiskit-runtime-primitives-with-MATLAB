@@ -5,7 +5,7 @@ close all;
 
 %% Setup IBM Quantum Platform credentials
 channel = "ibm_quantum";
-apiToken = "token";
+apiToken = "Token";
 
 %%
 backend="ibm_cairo";
@@ -17,15 +17,16 @@ qasm= generateQASM(c1);
 
 params.ai = true;
 params.optimization_level = 3;
-params.coupling_map = NaN;
-params.qiskit_transpile_options = NaN;
-params.ai_layout_mode  = NaN;
+params.coupling_map = [];
+params.qiskit_transpile_options = []; %% Find the keys and values of this Dic!
+params.ai_layout_mode  = 'KEEP'; %% 'KEEP', 'OPTIMIZE', 'IMPROVE'
 
 channelInfo.token = apiToken;
 channelInfo.channel = channel;
 
-%%
-transpiled_circuit = transpile.run(qasm,params,backend,channelInfo);
+%% Transpile a circuit using Transpile Service
+cloud_transpiler_service = TranspilerService(params, backend, channelInfo);
+transpiled_circuit = cloud_transpiler_service.run(qasm);
 
 
 
