@@ -5,7 +5,7 @@ close all;
 
 %% Setup IBM Quantum Platform credentials
 channel = "ibm_quantum";
-apiToken = "7d37efbcf8493c120b1a377a5488598dccedcece7291dfc23ded72067d9f15c4a22151274edc408236167c7edd24e9a3f442076dc70222e54cda4d570c734944";
+apiToken = "token";
 
 %% Define backend and access
 backend="ibm_cairo";
