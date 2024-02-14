@@ -77,7 +77,7 @@ classdef transpile
             params.optimization_level = data.optimization_level;
             params.use_ai = data.ai;
 
-            body.qasm_circuits = circuit;
+            body.qasm_circuits = extractBefore(circuit,"c = ");
 
 
             if isfield(data,'ai_layout_mode') && ~isempty(data.ai_layout_mode) && ~isnan(data.ai_layout_mode)
