@@ -18,17 +18,17 @@ classdef TranspilerService
    end
    methods
 
-       function obj = TranspilerService(params, backend, channelInfo)
+       function obj = TranspilerService(backend, channelInfo, params)
            obj.backend = backend;
            obj.channelInfo = channelInfo;
-           if ~isempty(params)
+           if exist('params','var') && ~isempty(params) 
                 obj.params = params;
            else
                 params.ai = false;
-                params.optimization_level = 3;
-                params.coupling_map = NaN;
-                params.qiskit_transpile_options = NaN;
-                params.ai_layout_mode  = NaN;
+                params.optimization_level = 1;
+                params.coupling_map = [];
+                params.qiskit_transpile_options = [];
+                params.ai_layout_mode  = [];
                 obj.params = params;
            end
 
@@ -43,6 +43,7 @@ classdef TranspilerService
             parameters.optimization_level = data.optimization_level;
             parameters.use_ai = data.ai;
 
+            %% Remove the measurement from the qasm
             body.qasm_circuits = extractBefore(circuit,"c = ");
 
 
@@ -73,32 +74,41 @@ classdef TranspilerService
             
             method = matlab.net.http.RequestMethod.POST;
             resp = TranspilerService.do_request (method,uri,body,authorization,var.timeout,parameters);
-
+            
+            %% Receive the task_id for the submitted circuit
             task_id = resp.task_id;
 
             method = matlab.net.http.RequestMethod.GET;
             uri = append(uri,'/',task_id);
             
+            %% Retreive the transpiled circuit using the task_id
             transpiled_info.state = '';
             while transpiled_info.state ~= "SUCCESS"
                 transpiled_info = TranspilerService.do_request (method,uri,[],authorization,var.timeout,[]); 
+                if transpiled_info.state == "FAILURE"
+                    error('The status of the submitted transpiler job is FAILURE'); 
+                end
             end
 
             transpile_circuit = transpiled_info.result;
-            %% Adding the measurement to the transpiled circuit
-            transpile_circuit.qasm = extractAfter(transpile_circuit.qasm,'q;');
-            transpile_circuit.qasm = insertAfter(transpile_circuit.qasm,";",newline);
-              
-            for i = 1:length(transpile_circuit.layout.final)
-                 sorted_index = sort(transpile_circuit.layout.final);
-                 measure = strcat('c[', num2str(i-1),'] = measure q[',num2str(sorted_index(i)), '];');
-                 transpile_circuit.qasm = [transpile_circuit.qasm measure newline];
-            end
 
-            transpile_circuit.qasm = ['OPENQASM 3;' newline 'include "stdgates.inc";' newline ...
-                'bit[', num2str(length(transpile_circuit.layout.final)) '] c;' newline ...
-                'qubit[' num2str(length(transpile_circuit.layout.initial)) '] q;' newline ...
-                transpile_circuit.qasm];
+            %% Adding the measurement to the transpiled circuit if there is no measurment!
+            if ~contains(transpile_circuit.qasm,"measure")
+                transpile_circuit.qasm = extractAfter(transpile_circuit.qasm,'q;');
+                transpile_circuit.qasm = insertAfter(transpile_circuit.qasm,";",newline);
+                  
+                for i = 1:length(transpile_circuit.layout.final)
+                     sorted_index = sort(transpile_circuit.layout.final);
+                     measure = strcat('c[', num2str(i-1),'] = measure q[',num2str(sorted_index(i)), '];');
+                     transpile_circuit.qasm = [transpile_circuit.qasm measure newline];
+                end
+    
+                transpile_circuit.qasm = ['OPENQASM 3;' newline 'include "stdgates.inc";' newline ...
+                    'bit[', num2str(length(transpile_circuit.layout.final)) '] c;' newline ...
+                    'qubit[' num2str(length(transpile_circuit.layout.initial)) '] q;' newline ...
+                    transpile_circuit.qasm];
+                
+            end
 
 
     
@@ -119,15 +129,21 @@ classdef TranspilerService
                 contentTypeField = matlab.net.http.field.ContentTypeField('application/json');
                 acceptField = matlab.net.http.field.AcceptField([type_json]);
                 
-                if authorization.channel == "ibm_cloud" 
-                    crn = matlab.net.http.HeaderField('Service-CRN', authorization.crn);
-                    token = matlab.net.http.HeaderField('Authorization', authorization.token);
-                    headers = [acceptField, contentTypeField, token,crn];
-                else
-                    token = matlab.net.http.HeaderField('Authorization', 'Bearer ' + authorization.token);
-                    headers = [acceptField, token, contentTypeField];
-                end
-                
+                %%% The transpiler Service has not yet support with ibm_cloud! 
+                %% This option will be added in future 
+                % if authorization.channel == "ibm_cloud" 
+                %     crn = matlab.net.http.HeaderField('Service-CRN', authorization.crn);
+                %     token = matlab.net.http.HeaderField('Authorization', authorization.token);
+                %     headers = [acceptField, contentTypeField, token,crn];
+                % 
+                % else
+                % end
+
+                % Authorization.channel == "ibm_cloud"
+                token = matlab.net.http.HeaderField('Authorization', 'Bearer ' + authorization.token);
+                headers = [acceptField, token, contentTypeField];
+
+               
                 if ~isempty(params)
                     % Create a QueryParameter array
                     queryParams = matlab.net.QueryParameter(params);
