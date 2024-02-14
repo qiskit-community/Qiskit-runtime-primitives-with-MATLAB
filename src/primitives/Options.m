@@ -52,19 +52,24 @@ classdef Options
         Observables = varargin{1,4};
         
 
-        for i = 1: length(circuit)
-            qasm(i) = generateQASM(circuit(i));
-        end
-  
-        options.circuits = cellstr(qasm);
-        if length(circuit)==1
-            options.circuit_indices = {0};
-            options.parameter_values = {[]};
+        if isobject(circuit)
+            for i = 1: length(circuit)
+                qasm(i) = generateQASM(circuit(i));
+            end
+            options.circuits = cellstr(qasm);
+            if length(circuit)==1
+                options.circuit_indices = {0};
+                options.parameter_values = {[]};
+            else
+                options.circuit_indices = 0:length(circuit)-1;
+                options.parameter_values = cell(1,length(circuit));
+            end
+
         else
-            options.circuit_indices = 0:length(circuit)-1;
-            options.parameter_values = cell(1,length(circuit));
+            options.circuits = cellstr(circuit);
         end
-       
+        
+        
         if id
             observables = containers.Map();
             observables('__type__') = "settings";

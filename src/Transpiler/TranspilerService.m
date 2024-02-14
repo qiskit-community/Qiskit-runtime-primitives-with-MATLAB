@@ -85,6 +85,22 @@ classdef TranspilerService
             end
 
             transpile_circuit = transpiled_info.result;
+            %% Adding the measurement to the transpiled circuit
+            transpile_circuit.qasm = extractAfter(transpile_circuit.qasm,'q;');
+            transpile_circuit.qasm = insertAfter(transpile_circuit.qasm,";",newline);
+              
+            for i = 1:length(transpile_circuit.layout.final)
+                 sorted_index = sort(transpile_circuit.layout.final);
+                 measure = strcat('c[', num2str(i-1),'] = measure q[',num2str(sorted_index(i)), '];');
+                 transpile_circuit.qasm = [transpile_circuit.qasm measure newline];
+            end
+
+            transpile_circuit.qasm = ['OPENQASM 3;' newline 'include "stdgates.inc";' newline ...
+                'bit[', num2str(length(transpile_circuit.layout.final)) '] c;' newline ...
+                'qubit[' num2str(length(transpile_circuit.layout.initial)) '] q;' newline ...
+                transpile_circuit.qasm];
+
+
     
        end
       
