@@ -18,6 +18,8 @@ classdef constants
        urllog_crn = 'https://iam.cloud.ibm.com/identity/token',
        matlab_version = 'qiskit-version-2/0.39.2/MATLAB\',
 
+       urltranspile = 'https://cloud-transpiler.quantum.ibm.com/transpile',
+
        timeout = 100; %% Timeout session set to be 100 Sec
    end
    methods(Static)
