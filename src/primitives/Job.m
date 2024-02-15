@@ -139,7 +139,6 @@ classdef Job
 
             if status== "Completed"
                 %%%% Read the results
-                status
                 if service.channel == "ibm_cloud"
                     uri = append(append(var.urljob_crn,job_id),"/results");
                 else

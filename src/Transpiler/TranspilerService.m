@@ -12,34 +12,36 @@
 classdef TranspilerService
    properties
  
-       channelInfo,
-       backend,
-       params
+       authParams,
+       transpilationOptions,
    end
    methods
 
-       function obj = TranspilerService(backend, channelInfo, params)
-           obj.backend = backend;
-           obj.channelInfo = channelInfo;
-           if exist('params','var') && ~isempty(params) 
-                obj.params = params;
-           else
-                params.ai = false;
-                params.optimization_level = 1;
-                params.coupling_map = [];
-                params.qiskit_transpile_options = [];
-                params.ai_layout_mode  = [];
-                obj.params = params;
-           end
+       function obj = TranspilerService(authParams)
+        obj.authParams = authParams;
+           
+        transpilationOptions.ai = false;
+        transpilationOptions.optimization_level = 1;
+        transpilationOptions.coupling_map = [];
+        transpilationOptions.qiskit_transpile_options = [];
+        transpilationOptions.ai_layout_mode  = [];
+        obj.transpilationOptions = transpilationOptions;
 
        end
       
        
        function transpile_circuit = run(varargin)
             circuit = varargin{1,2};
-            data     = varargin{1, 1}.params;
+            backend = varargin{1,3};
+
+            if length(varargin) == 4 && ~isempty(varargin{1,4}) 
+                data = varargin{1,4};
+            else
+                data = varargin{1, 1}.transpilationOptions;
+
+            end
             
-            parameters.backend = varargin{1, 1}.backend;
+            parameters.backend = backend;
             parameters.optimization_level = data.optimization_level;
             parameters.use_ai = data.ai;
 
@@ -59,14 +61,13 @@ classdef TranspilerService
 
 
             var = constants;
-            authorization =  varargin{1, 1}.channelInfo;
+            authorization =  varargin{1, 1}.authParams;
             
-            %%%% Transpiler Service with ibm_cloud needs attention!!!!
-            if varargin{1, 1}.channelInfo.channel == "ibm_cloud"
+            %%%% Transpiler Service has not yet support ibm_cloud!!!!
+            if authorization.channel == "ibm_cloud"
                authorization.crn = hubinfo.instance;
                authorization.token = append(hubinfo.tokenType,' ', hubinfo.Access_API);
                uri = var.urltranspile;
-       
             else
                uri = var.urltranspile;
                

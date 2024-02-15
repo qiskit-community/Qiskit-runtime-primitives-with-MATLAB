@@ -29,7 +29,7 @@ service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
 service.Start_session = true; %set to true to enable Qiskit Runtime Session 
-backend="ibm_lagos";
+backend="ibmq_qasm_simulator";
 
 % service.hub = "your-hub"
 % service.group = "your-group"

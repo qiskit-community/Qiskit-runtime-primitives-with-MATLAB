@@ -5,7 +5,7 @@ close all;
 
 %% Setup IBM Quantum Platform credentials
 channel = "ibm_quantum";
-apiToken = "token";
+apiToken = "MY_IBM_QUANTUM_TOKEN";
 
 %% Define backend and access
 backend="ibm_cairo";
@@ -15,21 +15,32 @@ c1 = quantumCircuit([hGate(1) cxGate(1,2)]);
 
 qasm= generateQASM(c1);
 
-%% Parameters for the transpilerService, this would be optional input to the TranspilerService 
-params.ai = true;
-params.optimization_level = 2;
-params.coupling_map = [];
-params.qiskit_transpile_options = []; %% Find the keys and values of this Dic!
-params.ai_layout_mode  = 'OPTIMIZE'; %% 'KEEP', 'OPTIMIZE', 'IMPROVE'
+%% transpilationOptions for the transpilerService, this would be optional input to the TranspilerService
+%%% Default values: 
+%           transpilationOptions.optimization_level=1
+%           ranspilationOptions.ai = false
+%           transpilationOptions.coupling_map = [];
+%           transpilationOptions.qiskit_transpile_options = []; 
+%           transpilationOptions.ai_layout_mode  = []; 
 
-channelInfo.token = apiToken;
-channelInfo.channel = channel;
+transpilationOptions.ai = false;
+transpilationOptions.optimization_level = 1;
+transpilationOptions.coupling_map = [];
+transpilationOptions.qiskit_transpile_options = []; %% 
+transpilationOptions.ai_layout_mode  = 'OPTIMIZE'; %% 'KEEP', 'OPTIMIZE', 'IMPROVE'
 
-%% Transpile the circuit
-cloud_transpiler_service = TranspilerService(backend, channelInfo,params);
-transpiled_circuit = cloud_transpiler_service.run(qasm);
+%% Authentication parameters
+authParams.token = apiToken;
+authParams.channel = channel;
 
-%% 1. Enable the session and Sampler
+%% 1. Transpile the circuit
+%%% Define the Service using your Authentications (Token and access channel)
+cloud_transpiler_service = TranspilerService(authParams); 
+
+%%%% Execute the transpiler Service
+transpiled_circuit = cloud_transpiler_service.run(qasm, backend,transpilationOptions); 
+
+%% 2. Enable the session and Sampler
 backend="ibmq_qasm_simulator";
 
 service = QiskitRuntimeService(channel,apiToken,[]);
@@ -40,8 +51,7 @@ options = Options();
 options.transpilation_settings.skip_transpilation = true;
 sampler = Sampler(session,options);
 
-%% 3. Execute the circuit using sampler primititve
-
+%% 3. Execute the transpiled circuit using sampler primititve
 job1 = sampler.run(transpiled_circuit.qasm);
 
 if isfield(job1,'session_id')
