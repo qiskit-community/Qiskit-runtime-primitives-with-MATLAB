@@ -16,12 +16,18 @@ classdef Session
    end
    methods (Access=public)
        function obj = Session(service,backend)
-            obj.service = service;
             obj.backend = backend;
+            
+            if ~isempty(service.session_mode) && service.Start_session==1
+                service.session_mode = "batch";
+                obj.service = service;
+            else
+                obj.service = service;
+            end
 
-            symbols = ['a':'z' 'A':'Z' '0':'9'];
-            MAX_ST_LENGTH = 16;
-            stLength = randi([1,length(symbols)],MAX_ST_LENGTH,1);
+            % symbols = ['a':'z' 'A':'Z' '0':'9'];
+            % MAX_ST_LENGTH = 16;
+            % stLength = randi([1,length(symbols)],MAX_ST_LENGTH,1);
             
             % if service.Start_session ==1
             %     % obj.service.session_id = symbols(stLength);

@@ -71,10 +71,9 @@ classdef Job
             var = constants;
             authorization.channel =  hubinfo.channel ;
 
-            body.program_id = hubinfo.program_id;
-            body.backend = hubinfo.backend;
-            body.params = params;
+           
             caller = append(var.matlab_version,version);
+            method = matlab.net.http.RequestMethod.POST;
 
             if hubinfo.channel == "ibm_cloud"
                authorization.crn = hubinfo.instance;
@@ -90,27 +89,40 @@ classdef Job
                
             end %%% End of "ibm_cloud"
             
+            %%% Retreive the session id by calling the session url!
             if isempty(hubinfo.session_id)
-                   if hubinfo.Start_session==0
-                        start_session = false;
-                   else 
-                        start_session = true;
+                   if hubinfo.Start_session==1
+                       if hubinfo.channel == "ibm_cloud" %%% The url needs to be updated!
+                           uri_session = var.uri_session_crn;
+                       else
+                           uri_session = var.uri_session_iqp;
+                           body_session.instance = hubinfo.hub + '/' + hubinfo.group + '/' + hubinfo.project;
+                       end
+              
+                       body_session.backend = hubinfo.backend;
+                       body_session.mode = hubinfo.session_mode;
+                       session_job = Job.do_request (method,uri_session,body_session,authorization,var.timeout,caller);
+                       body.session_id = session_job.id;
+                       job_info.session_id = session_job.id;
                    end
 
-                    body.start_session = start_session;
+                    % body.start_session = start_session;
                else
                     body.session_id = hubinfo.session_id;
+                    
             end
             
+            body.program_id = hubinfo.program_id;
+            body.backend = hubinfo.backend;
+            body.params = params;            
             
-            method = matlab.net.http.RequestMethod.POST;
             job = Job.do_request (method,uri,body,authorization,var.timeout,caller);
             
             job_info.id = job.id;
             job_info.backend = job.backend;
-            if isfield(job,'session_id')
-                job_info.session_id = job.session_id;
-            end
+            % if isfield(job,'session_id')
+            %     job_info.session_id = job.session_id;
+            % end
 
       end
 %%

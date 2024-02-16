@@ -45,9 +45,13 @@ apiToken = "MY_IBM_QUANTUM_TOKEN";
 
 service = QiskitRuntimeService(channel,apiToken,[]);
 
-%%
+%% Define backend and access
 service.Start_session = true; %set to true to enable Qiskit Runtime Session 
-backend="ibm_lagos";
+if service.Start_session ==true;
+    service.session_mode = "batch";
+end
+
+backend="ibm_brisbane";
 
 % service.hub = "your-hub"
 % service.group = "your-group"

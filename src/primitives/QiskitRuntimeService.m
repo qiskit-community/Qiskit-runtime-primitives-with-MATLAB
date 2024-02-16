@@ -21,6 +21,7 @@ classdef QiskitRuntimeService
     channel = [];
     tokenType = '';
     instance;
+    session_mode;
    end
    methods
        function obj = QiskitRuntimeService(channel, apiToken, instance)
@@ -36,6 +37,7 @@ classdef QiskitRuntimeService
                 obj.session_id = [];
                 obj.channel = "ibm_cloud";
                 obj.instance = instance;
+                obj.session_mode = [];
             else
                 obj.hub = "ibm-q";
                 obj.group = "open";
@@ -46,6 +48,7 @@ classdef QiskitRuntimeService
                 obj.channel = "ibm_quantum";
                 obj.Start_session = true;
                 obj.session_id = [];
+                obj.session_mode = [];
 
 
             end
