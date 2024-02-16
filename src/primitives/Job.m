@@ -106,7 +106,6 @@ classdef Job
                        job_info.session_id = session_job.id;
                    end
 
-                    % body.start_session = start_session;
                else
                     body.session_id = hubinfo.session_id;
                     
@@ -120,9 +119,6 @@ classdef Job
             
             job_info.id = job.id;
             job_info.backend = job.backend;
-            % if isfield(job,'session_id')
-            %     job_info.session_id = job.session_id;
-            % end
 
       end
 %%
