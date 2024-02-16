@@ -16,7 +16,7 @@ close all;
 % channel = "ibm_cloud";
 % apiToken = 'MY_IBM_CLOUD_API_KEY';
 % crn_service = 'MY_IBM_CLOUD_CRN';
-% 
+
 % service = QiskitRuntimeService(channel,apiToken,crn_service);
 
 
@@ -24,16 +24,20 @@ close all;
 channel = "ibm_quantum";
 apiToken = "MY_IBM_QUANTUM_TOKEN";
 
-
-service = QiskitRuntimeService(channel,apiToken,[]);
+% service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
 service.Start_session = true; %set to true to enable Qiskit Runtime Session 
-backend="ibmq_qasm_simulator";
+if service.Start_session ==true;
+    service.session_mode = "batch";
+end
 
-% service.hub = "your-hub"
-% service.group = "your-group"
-% service.project = "your-project"
+backend="ibm_brisbane";
+
+service.hub = "ibm-q-internal";
+service.group = "deployed";
+service.project = "default";
+
 %% 1. Enable the session and Sampler
 session = Session(service, backend);
 

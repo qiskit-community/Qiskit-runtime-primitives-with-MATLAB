@@ -46,7 +46,6 @@ backend="ibmq_qasm_simulator";
 service = QiskitRuntimeService(channel,apiToken,[]);
 session = Session(service, backend);
 
-service.Start_session = true; %set to true to enable Qiskit Runtime Session 
 options = Options();
 options.transpilation_settings.skip_transpilation = true;
 sampler = Sampler(session,options);

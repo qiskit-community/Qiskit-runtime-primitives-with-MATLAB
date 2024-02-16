@@ -26,13 +26,18 @@ global session_id;
 
 %% Setup IBM Quantum Platform credentials
 channel = "ibm_quantum";
-apiToken="MY_IBM_QUANTUM_TOKEN";
+apiToken = "MY_IBM_QUANTUM_TOKEN";
+
+
 service = QiskitRuntimeService(channel,apiToken,[]);
 
-%%
-service.program_id = "estimator";
-service.Start_session = true;
-backend="ibm_lagos";
+%% Define backend and access
+service.Start_session = true; %set to true to enable Qiskit Runtime Session 
+if service.Start_session ==true;
+    service.session_mode = "batch";
+end
+
+backend="ibm_brisbane";
 
 % service.hub = "your-hub"
 % service.group = "your-group"

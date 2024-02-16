@@ -11,7 +11,7 @@
 
 classdef constants 
    properties(SetAccess = private)
-       urljob_iqp = 'https://runtime-us-east.quantum-computing.ibm.com/jobs/',
+       urljob_iqp = 'https://api.quantum-computing.ibm.com/runtime/jobs/',
        urljob_crn = 'https://us-east.quantum-computing.cloud.ibm.com/jobs/',
 
        urllog_iqp = 'https://auth.quantum-computing.ibm.com/api/users/loginWithToken',
@@ -19,6 +19,9 @@ classdef constants
        matlab_version = 'qiskit-version-2/0.39.2/MATLAB\',
 
        urltranspile = 'https://cloud-transpiler.quantum.ibm.com/transpile',
+       
+       uri_session_iqp  = 'https://api.quantum-computing.ibm.com/runtime/sessions',
+       uri_session_crn  = 'https://us-east.quantum-computing.cloud.ibm.com/sessions/',
 
        timeout = 100; %% Timeout session set to be 100 Sec
    end
