@@ -51,16 +51,20 @@ classdef Job
                 r = send(request,uri,options);
              
                 statuscode = int32(r.StatusCode);
-                if r.StatusCode ~= matlab.net.http.StatusCode.OK
+                if r.StatusCode ~= matlab.net.http.StatusCode.OK && r.StatusCode ~= 429
                     disp(["Error Code: ", string(statuscode), ': ', getReasonPhrase(getClass(r.StatusCode)),': ',getReasonPhrase(r.StatusCode)])
                     disp(r.Body.Data.errors)
+                elseif r.StatusCode == 429
+                    pause(str2double(r.Header(1,19).Value));
+                else 
+                    response = r.Body.Data;
+                    retry = retry+1;
+                    if (retry==4)
+                        break;
+                    end
                 end
 
-                response = r.Body.Data;
-                retry = retry+1;
-                if (retry==4)
-                    break;
-                end
+                
             end
         end
        
@@ -144,7 +148,7 @@ classdef Job
             method = matlab.net.http.RequestMethod.GET;
             response = Job.do_request (method,uri,[],authorization,var.timeout);
             status = response.status; 
-
+            disp(status)
             if status== "Completed"
                 %%%% Read the results
                 if service.channel == "ibm_cloud"
