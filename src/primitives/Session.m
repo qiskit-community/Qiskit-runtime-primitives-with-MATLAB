@@ -18,7 +18,7 @@ classdef Session
        function obj = Session(service,backend)
             obj.backend = backend;
             
-            if ~isempty(service.session_mode) && service.Start_session==1
+            if isempty(service.session_mode) && service.Start_session==1
                 service.session_mode = "batch";
                 obj.service = service;
             else
