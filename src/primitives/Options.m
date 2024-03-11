@@ -100,19 +100,19 @@ classdef Options
       
         end
         options.resilience_settings.level = options_params.resilience_settings.level ;
-        options.transpilation_settings.optimization_settings.level = options_params.transpilation_settings.optimization_settings.level;
+        % options.transpilation_settings.optimization_settings.level = options_params.transpilation_settings.optimization_settings.level;
         options.run_options.shots = options_params.run_options.shots;
-        options.transpilation_settings.skip_transpilation = options_params.transpilation_settings.skip_transpilation;
-        options.transpilation_settings.approximation_degree = options_params.transpilation_settings.approximation_degree ;
-        options.transpilation_settings.initial_layout = options_params.transpilation_settings.initial_layout;
-        options.transpilation_settings.layout_method = options_params.transpilation_settings.layout_method;
-        options.transpilation_settings.routing_method = options_params.transpilation_settings.routing_method;
-        options.transpilation_settings.coupling_map = options_params.transpilation_settings.coupling_map;
-        options.transpilation_settings.basis_gates = options_params.transpilation_settings.basis_gates;
+        % options.transpilation_settings.skip_transpilation = options_params.transpilation_settings.skip_transpilation;
+        % options.transpilation_settings.approximation_degree = options_params.transpilation_settings.approximation_degree ;
+        % options.transpilation_settings.initial_layout = options_params.transpilation_settings.initial_layout;
+        % options.transpilation_settings.layout_method = options_params.transpilation_settings.layout_method;
+        % options.transpilation_settings.routing_method = options_params.transpilation_settings.routing_method;
+        % options.transpilation_settings.coupling_map = options_params.transpilation_settings.coupling_map;
+        % options.transpilation_settings.basis_gates = options_params.transpilation_settings.basis_gates;
         options.resilience_settings.noise_amplifier = options_params.resilience_settings.noise_amplifier;
         options.resilience_settings.noise_factors = options_params.resilience_settings.noise_factors;
         options.resilience_settings.extrapolator = options_params.resilience_settings.extrapolator;
-        options.run_options.init_qubits = options_params.run_options.init_qubits;
+        % options.run_options.init_qubits = options_params.run_options.init_qubits;
         options.run_options.noise_model = options_params.run_options.noise_model ;
         options.run_options.seed_simulator = options_params.run_options.seed_simulator;
         

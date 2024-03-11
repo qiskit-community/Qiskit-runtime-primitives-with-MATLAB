@@ -46,7 +46,7 @@ classdef TranspilerService
             parameters.use_ai = data.ai;
 
             %% Remove the measurement from the qasm
-            body.qasm_circuits = extractBefore(circuit,"c = ");
+            body.qasm_circuits = circuit;
 
 
             if isfield(data,'ai_layout_mode') && ~isempty(data.ai_layout_mode)
@@ -95,20 +95,18 @@ classdef TranspilerService
 
             %% Adding the measurement to the transpiled circuit if there is no measurment!
             if ~contains(transpile_circuit.qasm,"measure")
-                transpile_circuit.qasm = extractAfter(transpile_circuit.qasm,'q;');
+                transpile_circuit.qasm = extractAfter(transpile_circuit.qasm,'"stdgates.inc";');
                 transpile_circuit.qasm = insertAfter(transpile_circuit.qasm,";",newline);
-                  
-                for i = 1:length(transpile_circuit.layout.final)
-                     sorted_index = sort(transpile_circuit.layout.final);
-                     measure = strcat('c[', num2str(i-1),'] = measure q[',num2str(sorted_index(i)), '];');
-                     transpile_circuit.qasm = [transpile_circuit.qasm measure newline];
-                end
-    
+
+            for i = 1:length(transpile_circuit.layout.final)
+                 sorted_index = sort(transpile_circuit.layout.final);
+                 measure = strcat('c[', num2str(i-1),'] = measure q[',num2str(sorted_index(i)), '];');
+                 transpile_circuit.qasm = [transpile_circuit.qasm measure newline];
+            end
                 transpile_circuit.qasm = ['OPENQASM 3;' newline 'include "stdgates.inc";' newline ...
-                    'bit[', num2str(length(transpile_circuit.layout.final)) '] c;' newline ...
                     'qubit[' num2str(length(transpile_circuit.layout.initial)) '] q;' newline ...
-                    transpile_circuit.qasm];
-                
+                     transpile_circuit.qasm];
+                    
             end
 
 
