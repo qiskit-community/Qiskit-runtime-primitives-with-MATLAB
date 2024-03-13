@@ -13,7 +13,6 @@ classdef Estimator
    properties
        session,
        circuits,
-       parameters,
        Hamiltonian,
        options,
    end
@@ -27,11 +26,23 @@ classdef Estimator
        end
 
        function jobinfo = run(varargin)
-            circuit     = varargin{1,2};
+           %%% Remove classical bit
+            pat = "bit[" + digitsPattern + ("] c;");
+            circuit     = erase(varargin{1,2},pat);
+            %%% Remove measurements
+            pat2 = ("c["|"c =" );
+            circuit     = extractBefore(circuit, pat2);
+            
             hubinfo    = varargin{1, 1}.session.service;
             hamiltonian = varargin{1,3};
-
-            params = varargin{1, 1}.options.SetOptions(circuit,1, hamiltonian);
+            if nargin==4
+                parameters = varargin{1,4};
+                params = varargin{1, 1}.options.SetOptions(circuit,1, hamiltonian,parameters);
+            else
+                params = varargin{1, 1}.options.SetOptions(circuit,1, hamiltonian);
+            end
+    
+            
             %% Run the circuit on IBM Quantum Estimator primitive
             %%%% Submit the job
             jobinfo = Job.submitJob(params, hubinfo);

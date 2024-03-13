@@ -19,11 +19,9 @@ close all;
 % 
 % service = QiskitRuntimeService(channel,apiToken,crn_service);
 
-
 %% Setup IBM Quantum Platform credentials
 channel = "ibm_quantum";
 apiToken = "MY_IBM_QUANTUM_TOKEN";
-
 
 service = QiskitRuntimeService(channel,apiToken,[]);
 
@@ -33,11 +31,7 @@ if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_brisbane";
-
-% service.hub = "your-hub"
-% service.group = "your-group"
-% service.project = "your-project"
+backend="ibm_kyoto";
 
 %% 1. Enable the session and Estimator
 session = Session(service, backend);  
@@ -46,26 +40,46 @@ options = Options();
 options.transpilation_settings.skip_transpilation = false;
 estimator = Estimator(session,options);
 
-%% 1. Mapping the problem (H2 molecule) to qubits/Quantum Hamiltonian
+%% 2. Mapping the problem (H2 molecule) to qubits/Quantum Hamiltonian
 %%% The Hamiltonian (Pauli terms and coefficients) for a bonding distance
 %%% of 0.72 Angstrom will be:
 hydrogen_Pauli = ["II","IZ","ZI","ZZ","XX"];
 coeffs = string([-1.0523732, 0.39793742, -0.3979374 , -0.0112801, 0.18093119]);
 
+
 hamiltonian.Pauli_Term = hydrogen_Pauli;
 hamiltonian.Coeffs = coeffs;
 
+%% 3. Build Bell State circuit
+c1 = quantumCircuit([hGate(1) cxGate(1,2) ]); 
 
-%% 2. Build Bell State circuit
-c1 = quantumCircuit([hGate(1) cxGate(1,2)]); 
+qasm= generateQASM(c1);
 
-%% 3. Execute the circuit using estimator primititve
-job1 = estimator.run(c1,hamiltonian);
+%% 4. TranspilationOptions for the transpilerService, this would be optional input to the TranspilerService
+transpilationOptions.ai = false;
+transpilationOptions.optimization_level = 1;
+transpilationOptions.coupling_map = [];
+transpilationOptions.qiskit_transpile_options = []; %% 
+transpilationOptions.ai_layout_mode  = 'OPTIMIZE'; %% 'KEEP', 'OPTIMIZE', 'IMPROVE'
+
+%% Authentication parameters
+authParams.token = apiToken;
+authParams.channel = channel;
+
+%%% 4.1 Transpile the circuit
+%%% Define the Service using your Authentications (Token and access channel)
+cloud_transpiler_service = TranspilerService(authParams); 
+
+%%%% Execute the transpiler Service
+transpiled_circuit = cloud_transpiler_service.run(qasm, backend,transpilationOptions); 
+
+%% 5. Execute the circuit using estimator primititve
+job1 = estimator.run(transpiled_circuit.qasm,hamiltonian);
 
 if isfield(job1,'session_id')
     estimator.session.service.session_id = job1.session_id;
 end
-%% 4. Retrieve the results back
+%% 5.1 Retrieve the results back
 Results = estimator.Results(job1.id);
 Results
 

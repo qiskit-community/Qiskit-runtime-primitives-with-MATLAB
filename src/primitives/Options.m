@@ -46,28 +46,26 @@ classdef Options
    end
  %%
     function options = SetOptions (varargin)
+        
         options_params = varargin{1,1};
         circuit     = varargin{1,2};
         id          = varargin{1, 3};
         Observables = varargin{1,4};
         
-
-        if isobject(circuit)
-            for i = 1: length(circuit)
-                qasm(i) = generateQASM(circuit(i));
-            end
-            options.circuits = cellstr(qasm);
-            if length(circuit)==1
-                options.circuit_indices = {0};
-                options.parameter_values = {[]};
+        options.circuits = cellstr(circuit);
+        if size(circuit,1)==1
+            options.circuit_indices = {0};
+            if nargin==5
+                parameters = varargin{1,5};
+                options.parameter_values = {parameters};
             else
-                options.circuit_indices = 0:length(circuit)-1;
-                options.parameter_values = cell(1,length(circuit));
+                options.parameter_values = {[]};
             end
-
         else
-            options.circuits = cellstr(circuit);
+            options.circuit_indices = 0:length(circuit)-1;
+            options.parameter_values = cell(1,length(circuit));
         end
+
         
         
         if id
