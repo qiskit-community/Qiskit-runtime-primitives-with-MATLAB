@@ -14,7 +14,6 @@ classdef Sampler
        session,
        options,
        circuits,
-       parameters,
    end
    methods
 
@@ -29,9 +28,14 @@ classdef Sampler
             circuit    = varargin{1,2};
             hubinfo    = varargin{1, 1}.session.service;
             
+            if nargin==4
+                parameters = varargin{1,3};
+                %%%%%% Run the circuit on IBM Quantum Sampler program
+                params = varargin{1, 1}.options.SetOptions(circuit,0,[],parameters);
+            else
+                params = varargin{1, 1}.options.SetOptions(circuit,0,[]);
+            end
             
-            %%%%%% Run the circuit on IBM Quantum Sampler program
-            params = varargin{1, 1}.options.SetOptions(circuit,0,[]);
             %%%% Submit the job
             jobinfo = Job.submitJob(params, hubinfo);
 

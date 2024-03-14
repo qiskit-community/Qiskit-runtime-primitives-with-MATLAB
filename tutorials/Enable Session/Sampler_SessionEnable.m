@@ -21,10 +21,13 @@ close all;
 
 
 %% Setup IBM Quantum Platform credentials
+% channel = "ibm_quantum";
+% apiToken = "MY_IBM_QUANTUM_TOKEN";
+
 channel = "ibm_quantum";
 apiToken = "MY_IBM_QUANTUM_TOKEN";
 
-% service = QiskitRuntimeService(channel,apiToken,[]);
+service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
 service.Start_session = true; %set to true to enable Qiskit Runtime Session 
@@ -32,11 +35,8 @@ if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_brisbane";
+backend="ibm_kyoto";
 
-service.hub = "ibm-q-internal";
-service.group = "deployed";
-service.project = "default";
 
 %% 1. Enable the session and Sampler
 session = Session(service, backend);
@@ -46,17 +46,38 @@ options.transpilation_settings.skip_transpilation = true;
 sampler = Sampler(session,options);
 
 %% 2. Build Bell State circuit
-c1 = quantumCircuit([hGate(1) cxGate(1,2)]);
+c1 = quantumCircuit([hGate(1) cxGate(1,2)]); 
 
-%% 3. Execute the circuit using sampler primititve
-job1 = sampler.run(c1);
+qasm= generateQASM(c1);
+
+%% 3. TranspilationOptions for the transpilerService, this would be optional input to the TranspilerService
+transpilationOptions.ai = false;
+transpilationOptions.optimization_level = 1;
+transpilationOptions.coupling_map = [];
+transpilationOptions.qiskit_transpile_options = []; %% 
+transpilationOptions.ai_layout_mode  = 'OPTIMIZE'; %% 'KEEP', 'OPTIMIZE', 'IMPROVE'
+
+%% Authentication parameters
+authParams.token = apiToken;
+authParams.channel = channel;
+
+%%% 3.1 Transpile the circuit
+%%% Define the Service using your Authentications (Token and access channel)
+cloud_transpiler_service = TranspilerService(authParams); 
+
+%%%% Execute the transpiler Service
+transpiled_circuit = cloud_transpiler_service.run(qasm, backend,transpilationOptions); 
+
+
+%% 4. Execute the circuit using sampler primititve
+job1 = sampler.run(transpiled_circuit.qasm);
 
 if isfield(job1,'session_id')
     sampler.session.service.session_id = job1.session_id;
 end
 
 
-%% 4. Retrieve the results back
+%% 4.1 Retrieve the results back
 Results = sampler.Results(job1.id);
 Results
 

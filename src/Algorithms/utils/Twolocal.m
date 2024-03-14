@@ -9,7 +9,16 @@
 % that they have been altered from the originals.
 
 
-function circuit = Twolocal(circuitinfo,parameters)
+function [circuit, ansatz_qasm] = Twolocal(varargin)
+
+    if nargin==1
+        circuitinfo = varargin{1, 1};
+        parameters = -(1000)*[1:circuitinfo.num_parameters];
+    else
+        circuitinfo = varargin{1, 1};
+        parameters = varargin{1, 2};
+    end
+    
     Gates = [];
     N = length(circuitinfo.rotation_blocks);
     K = 0;
@@ -45,4 +54,7 @@ function circuit = Twolocal(circuitinfo,parameters)
     
     Gates  = [Gates, final_rot];
     circuit = quantumCircuit(Gates);
+    
+    parameters = -(1000)*[1:circuitinfo.num_parameters];
+    ansatz_qasm = ToParameters (circuit,parameters);
 end

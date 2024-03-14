@@ -93,7 +93,7 @@ classdef Job
                
             end %%% End of "ibm_cloud"
             
-            %%% Retreive the session id by calling the session url!
+            %%% Retreive the session id by calling the session API!
             if isempty(hubinfo.session_id)
                    if hubinfo.Start_session==1
                        if hubinfo.channel == "ibm_cloud" %%% The url needs to be updated!

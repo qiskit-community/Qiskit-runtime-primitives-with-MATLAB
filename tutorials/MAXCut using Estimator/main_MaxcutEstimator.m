@@ -64,21 +64,40 @@ options = Options();
 options.transpilation_settings.skip_transpilation = false;
 estimator = Estimator(session,options);
 
-%% 1. Mapping the problem (Maxcut problem) to qubits/Quantum Hamiltonian 
+%% 2. Mapping the problem (Maxcut problem) to qubits/Quantum Hamiltonian 
 %%% Convert the Maxcut problem into an Ising Hamiltonian
 [hamiltonian.Pauli_Term,hamiltonian.Coeffs,Offset_value, Offset_string] = Maxcut.ToIsing (G);
 
-%% 2. Choosing the ansatz circuit/s
+%% 3. Creating the ansatz circuit/s
 circuit.reps=2;
 circuit.entanglement = "linear";
 circuit.number_qubits = numnodes(G);
 circuit.rotation_blocks = ["ry","rx"];
 circuit.num_parameters = ((circuit.reps+1)*size(circuit.rotation_blocks,2))*circuit.number_qubits;
 
+[ansatz, parameterized_ansatz] = Twolocal(circuit);
+
+%% 3.1 transpilationOptions for the transpilerService, this would be optional input to the TranspilerService
+transpilationOptions.ai = false;
+transpilationOptions.optimization_level = 1;
+transpilationOptions.coupling_map = [];
+transpilationOptions.qiskit_transpile_options = []; %% 
+transpilationOptions.ai_layout_mode  = 'OPTIMIZE'; %% 'KEEP', 'OPTIMIZE', 'IMPROVE'
+
+% Authentication parameters
+authParams.token = apiToken;
+authParams.channel = channel;
+
+%%% 3.2 Transpile the circuit
+%%% Define the Service using your Authentications (Token and access channel)
+cloud_transpiler_service = TranspilerService(authParams); 
+
+%%%% Execute the transpiler Service
+transpiled_circuit = cloud_transpiler_service.run(parameterized_ansatz, backend,transpilationOptions); 
 
 %% Arguments for the optimizer 
 arg.hamiltonian = hamiltonian;
-arg.circuit     = circuit;
+arg.circuit     = transpiled_circuit.qasm;
 arg.estimator   = estimator;
 
 %% Define the cost function
@@ -96,22 +115,20 @@ op_options = optimoptions("surrogateopt",...
     "PlotFcn","optimplotfval",...
     "InitialPoints",x0);
 
-%% 3. Executing the quantum VQE algorithm using the qiskit Estimator primititve and MATLAB 
+%% 4. Executing the quantum VQE algorithm using the qiskit Estimator primititve and MATLAB 
 % optimizer to solve Maxcut problem
 
 rng default %% For reproducibility 
 
 [angles,minEnergy] = surrogateopt(cost_func,lower_bound,upper_bound,op_options);
 
-%% 4. Find the solution which is the bitstring with the highest probability
+%% 5. Find the solution which is the bitstring with the highest probability
 %%% We need to run the circuit with the acheived optimized parameters usng
 %%% sampler primititve
 
-ansatz = Twolocal(circuit, angles);
-
 sampler = Sampler (session,options);
 
-job = sampler.run(ansatz);
+job = sampler.run(transpiled_circuit.qasm,angles);
 results = sampler.Results(job.id);
 %%% extract the bitstring
 string_data = string(fieldnames(results.quasi_dists));
@@ -133,7 +150,7 @@ function [energy] = cost_function(parameters,arg)
 
     global session_id
     % Construct the variational circuit 
-    ansatz = Twolocal(arg.circuit, parameters);
+    ansatz = arg.circuit;
 
     estimator = arg.estimator; 
 
@@ -141,7 +158,7 @@ function [energy] = cost_function(parameters,arg)
         estimator.session.service.session_id = session_id;
     end
 
-    job       = estimator.run(ansatz,arg.hamiltonian);
+    job       = estimator.run(ansatz,arg.hamiltonian,parameters);
     
     if isfield(job,'session_id')
         session_id = job.session_id;

@@ -37,11 +37,12 @@ if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_brisbane";
+backend="ibmq_mumbai";
 
 % service.hub = "your-hub"
 % service.group = "your-group"
 % service.project = "your-project"
+
 
 %% 1. Enable the session and Estimator
 session = Session(service, backend);  
@@ -66,10 +67,30 @@ circuit.number_qubits = strlength(hydrogen_Pauli(1));
 circuit.rotation_blocks = ["ry","rx"];
 circuit.num_parameters = ((circuit.reps+1)*size(circuit.rotation_blocks,2))*circuit.number_qubits;
 
+[ansatz, parameterized_ansatz] = Twolocal(circuit);
+
+%% transpilationOptions for the transpilerService, this would be optional input to the TranspilerService
+transpilationOptions.ai = false;
+transpilationOptions.optimization_level = 1;
+transpilationOptions.coupling_map = [];
+transpilationOptions.qiskit_transpile_options = []; %% 
+transpilationOptions.ai_layout_mode  = 'OPTIMIZE'; %% 'KEEP', 'OPTIMIZE', 'IMPROVE'
+
+% Authentication parameters
+authParams.token = apiToken;
+authParams.channel = channel;
+
+%% 1. Transpile the circuit
+%%% Define the Service using your Authentications (Token and access channel)
+cloud_transpiler_service = TranspilerService(authParams); 
+
+%%%% Execute the transpiler Service
+transpiled_circuit = cloud_transpiler_service.run(parameterized_ansatz, backend,transpilationOptions); 
+
 
 %% Arguments for the optimizer 
 arg.hamiltonian = hamiltonian;
-arg.circuit     = circuit;
+arg.circuit     = transpiled_circuit.qasm;
 arg.estimator   = estimator;
 
 %% Define the cost function
@@ -100,16 +121,14 @@ fprintf('Ground state energy of H2 molecule for bonding distance 0.72 Angstrom: 
 function [energy] = cost_function(parameters,arg)    
 
     global session_id
-    % Construct the variational circuit 
-    ansatz = Twolocal(arg.circuit, parameters);
 
     estimator = arg.estimator; 
-
+    ansatz = arg.circuit;
     if estimator.session.service.Start_session
         estimator.session.service.session_id = session_id;
     end
 
-    job       = estimator.run(ansatz,arg.hamiltonian);
+    job       = estimator.run(ansatz,arg.hamiltonian,parameters);
     
     if isfield(job,'session_id')
         session_id = job.session_id;
