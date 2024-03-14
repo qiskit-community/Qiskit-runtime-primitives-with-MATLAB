@@ -63,15 +63,35 @@ options = Options();
 options.transpilation_settings.skip_transpilation = true;
 sampler = Sampler(session,options);
 
-%% 1. Choosing the ansatz circuit/s
+%% 2. Creating ansatz circuit/s
 circuit.reps=4;
 circuit.entanglement = "linear";
 circuit.number_qubits = numnodes(G);
 circuit.rotation_blocks = ["ry","rx"];
 circuit.num_parameters = ((circuit.reps+1)*size(circuit.rotation_blocks,2))*circuit.number_qubits;
 
+[ansatz, parameterized_ansatz] = Twolocal(circuit);
+
+%% 2.1 transpilationOptions for the transpilerService, this would be optional input to the TranspilerService
+transpilationOptions.ai = false;
+transpilationOptions.optimization_level = 1;
+transpilationOptions.coupling_map = [];
+transpilationOptions.qiskit_transpile_options = []; %% 
+transpilationOptions.ai_layout_mode  = 'OPTIMIZE'; %% 'KEEP', 'OPTIMIZE', 'IMPROVE'
+
+% Authentication parameters
+authParams.token = apiToken;
+authParams.channel = channel;
+
+%%%% Transpile the circuit
+%%% Define the Service using your Authentications (Token and access channel)
+cloud_transpiler_service = TranspilerService(authParams); 
+
+%%%% Execute the transpiler Service
+transpiled_circuit = cloud_transpiler_service.run(parameterized_ansatz, backend,transpilationOptions); 
+
 %% Arguments for the optimizer 
-arg.circuit     = circuit;
+arg.circuit     = transpiled_circuit.qasm;
 arg.sampler     = sampler; 
 arg.G = G;
 
@@ -91,20 +111,18 @@ op_options = optimoptions("surrogateopt",...
     "PlotFcn","optimplotfval",...
     "InitialPoints",x0);
 
-%% 2. Executing the quantum VQE algorithm using the qiskit Sampler primititve and MATLAB 
+%% 3. Executing the quantum VQE algorithm using the qiskit Sampler primititve and MATLAB 
 % optimizer to solve Maxcut problem
 
 rng default %% For reproducibility
 
 [angles,minEnergy] = surrogateopt(cost_func,lower_bound,upper_bound,op_options);
 
-%% 3. Find the solution which is the bitstring with the highest probability
+%% 4. Find the solution which is the bitstring with the highest probability
 %%% We need to run the circuit with the acheived optimized parameters usng
 %%% sampler primititve
 
-ansatz = Twolocal(circuit, angles);
-
-job = sampler.run(ansatz);
+job = sampler.run(transpiled_circuit.qasm,angles);
 results = sampler.Results(job.id);
 %%% extract the Bitstring
 string_data = string(fieldnames(results.quasi_dists));
@@ -124,16 +142,16 @@ Maxcut.plot_results(G,bitstring_data,probabilities, 'c');
 %% Define the cost function to calculate the expectation value of the retreived bit-strings
 function energy = cost_function (parameters,arg)
     
-    global session_id    
-    %%%% Construct the variational circuit 
-    ansatz = Twolocal(arg.circuit, parameters);
+    global session_id   
+
+    ansatz = arg.circuit;
     %%%% Run Sampler primitive
     sampler = arg.sampler;
     if sampler.session.service.Start_session
         sampler.session.service.session_id = session_id;
     end
 
-    job     = sampler.run(ansatz);
+    job     = sampler.run(ansatz,parameters);
     %%%% Retrieve the results back
     if isfield(job,'session_id')
         session_id = job.session_id;
