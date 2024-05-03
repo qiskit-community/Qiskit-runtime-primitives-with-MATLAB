@@ -72,17 +72,12 @@ classdef Estimator
             result = Job.retrieveResults(job_id, service);
             
             %%% decode and deserialize the Pub results
-            exp_val = zeros(1,length(result.x__value__.pub_results));
-            stds    = zeros(1,length(result.x__value__.pub_results));
+            exp_val = zeros(1,length(result.results));
+            stds    = zeros(1,length(result.results));
             
-            for k =1: length(result.x__value__.pub_results)
-
-                exp_val(k) = double(decode_and_deserialize(result.x__value__.pub_results(k).x__value__.data.x__value__.fields.evs.x__value__,1));
-                result.x__value__.pub_results(k).x__value__.data.x__value__.fields.evs.x__value__ = exp_val(k);
-                
-                stds(k) = double(decode_and_deserialize(result.x__value__.pub_results(k).x__value__.data.x__value__.fields.stds.x__value__,1));
-                result.x__value__.pub_results(k).x__value__.data.x__value__.fields.stds.x__value__ = stds(k);
-
+            for k =1: length(result.results)
+                exp_val(k) = result.results(1).data.evs;
+                stds(k) = result.results(1).data.stds;
             end
             exps = exp_val;
 
@@ -102,7 +97,7 @@ classdef Estimator
             end
             
             params.version = 2;
-            params.support_qiskit= true;        
+            params.support_qiskit= false;        
             params.resilience_level= estimator.options.resilience_level; 
             params.options = rmfield(estimator.options  ,"resilience_level");
 

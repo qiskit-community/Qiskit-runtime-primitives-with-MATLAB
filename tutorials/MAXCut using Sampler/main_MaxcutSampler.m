@@ -51,7 +51,7 @@ if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_hanoi";
+backend="ibm_bangkok";
 
 % service.hub = "your-hub"
 % service.group = "your-group"
@@ -143,16 +143,21 @@ results = sampler.Results(job.id);
 
 num_qubits = length(arg.circuit.layout.final); 
 
-Counts = double (decode_and_deserialize(results.x__value__.pub_results.x__value__.data.x__value__.fields.c.x__value__.array.x__value__,1));
+num_qubits = length(arg.circuit.layout.final); 
+
+Counts = results.results.data.c.samples;
 [Bitstring,~,Sorted_prob] = unique(Counts);
 probabilities = accumarray(Sorted_prob,1).';
-%%%%extract the Bitstring with the highest probability
-bits_max = Bitstring(find(probabilities==max(probabilities)));
-bits_max = dec2bin(bits_max(1),num_qubits);
-% Reverse the order of qubits
-x = bits_max(length(bits_max):-1:1);
 
-fprintf('The quantum solution for maxcut is: [ %s ]\n', x);
+%%%%extract the Bitstring with the highest probability
+Bit_max = Bitstring(find(probabilities==max(probabilities)));
+Bit_max = cell2mat(Bit_max(1));
+
+Bit_max = dec2bin(hex2dec(Bit_max(1,:)),num_qubits);
+% Reverse the order of qubits
+x = Bit_max(length(Bit_max):-1:1);
+
+fprintf('The quantum solution for maxcut problem is: [ %s ]\n', x);
 
 %%%% plot the results and color the graph using the received bit-string
 %%%% (solution)
@@ -183,15 +188,18 @@ function energy = cost_function (parameters,arg)
 
     num_qubits = length(arg.circuit.layout.final); 
 
-    Counts = double (decode_and_deserialize(results.x__value__.pub_results.x__value__.data.x__value__.fields.c.x__value__.array.x__value__,1));
+    Counts = results.results.data.c.samples;
     [Bitstring,~,Sorted_prob] = unique(Counts);
     probabilities = accumarray(Sorted_prob,1).';
+    
     %%%%extract the Bitstring with the highest probability
-    bits_max = Bitstring(find(probabilities==max(probabilities)));
-    bits_max = dec2bin(bits_max(1),num_qubits);
+    Bit_max = Bitstring(find(probabilities==max(probabilities)));
+    Bit_max = cell2mat(Bit_max(1));
+
+    Bit_max = dec2bin(hex2dec(Bit_max(1,:)),num_qubits);
     % Reverse the order of qubits
-    x = bits_max(length(bits_max):-1:1);
-    disp(x)
+    x = Bit_max(length(Bit_max):-1:1);
+    fprintf('The x value is: %s\n' , x)
     %%%% Calculate the expectation value using the bit string with the
     %%%% highest probability
     energy = - evaluate_fcn(x,arg.G);

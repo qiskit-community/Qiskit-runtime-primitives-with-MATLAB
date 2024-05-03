@@ -32,12 +32,11 @@ if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_hanoi";
+backend="ibm_bangkok";
 
 % service.hub = "your-hub"
 % service.group = "your-group"
 % service.project = "your-project"
-
 
 %% 1. Enable the session and Sampler
 session = Session(service, backend);
@@ -104,11 +103,12 @@ end
 %% 4.1 Retrieve the results back
 Results = sampler.Results(job1.id);
 
-Counts = double (decode_and_deserialize(Results.x__value__.pub_results.x__value__.data.x__value__.fields.c.x__value__.array.x__value__,1));
+Counts = Results.results.data.c.samples;
 [Bitstring,~,Sorted_prob] = unique(Counts);
 Probs = accumarray(Sorted_prob,1).';
 
-bar (Bitstring,Probs)
+Bit_str = str2num(cell2mat(Bitstring));
+bar (Bit_str,Probs)
 xlabel('Bitstring')
 ylabel('Counts')
 

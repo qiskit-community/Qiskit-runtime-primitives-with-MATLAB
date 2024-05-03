@@ -67,7 +67,7 @@ classdef Maxcut < handle
 %%
 function plot_results(G,bitstring_data,probability,color)
         figure;
-        bar(bitstring_data,probability,color)
+        bar(categorical(bitstring_data),probability,color)
         xlabel('Bitstrings')
         ylabel('Probabilities')
         title('Returned distribution from Qiskit Runtime Sampler primitive')
@@ -79,10 +79,13 @@ function plot_results(G,bitstring_data,probability,color)
         set(gca,'YTickLabelMode','auto')
         set(gca, 'LineWidth', 2.5)
         %%%% Color the graph based on the qiskit results
-        bits_max = bitstring_data(find(probability==max(probability)));
-        bits_max = dec2bin(bits_max(1));
+     %%%%extract the Bitstring with the highest probability
+        Bit_max = bitstring_data(find(probability==max(probability)));
+        Bit_max = cell2mat(Bit_max(1));
+        
+        Bit_max = dec2bin(hex2dec(Bit_max(1,:)),G.numnodes);
         % Reverse the order of qubits
-        x_final = bits_max(length(bits_max):-1:1);
+        x_final = Bit_max(length(Bit_max):-1:1);
 
         index =[];
         for i=1:length(x_final)

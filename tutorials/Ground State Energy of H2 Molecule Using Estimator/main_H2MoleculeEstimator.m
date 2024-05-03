@@ -28,7 +28,6 @@ global session_id;
 channel = "ibm_quantum";
 apiToken = "MY_IBM_QUANTUM_TOKEN";
 
-
 service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
@@ -37,14 +36,11 @@ if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_hanoi";
-
+backend="ibm_bangkok";
 
 % service.hub = "your-hub"
 % service.group = "your-group"
 % service.project = "your-project"
-
-
 %% 1. Enable the session and Estimator
 session = Session(service, backend);  
 

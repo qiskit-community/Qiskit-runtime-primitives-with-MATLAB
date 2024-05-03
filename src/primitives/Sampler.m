@@ -74,7 +74,7 @@ classdef Sampler
         end
         
         params.version = 2;
-        params.support_qiskit= true;        
+        params.support_qiskit= false;        
         params.options = sampler.options;
 
        end

@@ -100,7 +100,7 @@ classdef Job
                            uri_session = var.uri_session_crn;
                        else
                            uri_session = var.uri_session_iqp;
-                           body_session.instance = hubinfo.hub + '/' + hubinfo.group + '/' + hubinfo.project;
+                           body_session.instance = append(hubinfo.hub,'/',hubinfo.group, '/',hubinfo.project);
                        end
               
                        body_session.backend = hubinfo.backend;
