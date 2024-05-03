@@ -23,32 +23,53 @@ close all;
 channel = "ibm_quantum";
 apiToken = "MY_IBM_QUANTUM_TOKEN";
 
+
+%%
 service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
-service.Start_session = true; %set to true to enable Qiskit Runtime Session 
+service.Start_session = false; %set to true to enable Qiskit Runtime Session 
 if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_kyoto";
+backend="ibm_hanoi";
+
+% service.hub = "your-hub"
+% service.group = "your-group"
+% service.project = "your-project"
 
 %% 1. Enable the session and Estimator
 session = Session(service, backend);  
 
-options = Options();
-options.transpilation_settings.skip_transpilation = false;
-estimator = Estimator(session,options);
+% options = {};
+% options.transpilation.optimization_level = 1;
+% options.twirling.enable_gates = true;
+% options.dynamical_decoupling.enable = true;
+% options.dynamical_decoupling.sequence_type = 'XpXm';
+% options.twirling.enable_gates = true;
+% options.twirling.enable_measure = true;
+% options.twirling.num_randomizations = "auto";
+% options.twirling.shots_per_randomization = "auto";   
+% options.twirling.strategy = "active-accum";
+% 
+% options.dynamical_decoupling.enable = true;
+% options.dynamical_decoupling.sequence_type = 'XpXm';
+% options.dynamical_decoupling.extra_slack_distribution= 'middle';
+% options.dynamical_decoupling.scheduling_method= 'alap';
 
+estimator = Estimator(session);
+
+estimator.options.dynamical_decoupling.sequence_type = 'XpXm';
 %% 2. Mapping the problem (H2 molecule) to qubits/Quantum Hamiltonian
 %%% The Hamiltonian (Pauli terms and coefficients) for a bonding distance
 %%% of 0.72 Angstrom will be:
-hydrogen_Pauli = ["II","IZ","ZI","ZZ","XX"];
-coeffs = string([-1.0523732, 0.39793742, -0.3979374 , -0.0112801, 0.18093119]);
+hydrogen_Pauli = {"II","IZ","ZI","ZZ","XX"};
+coeffs = {-1.0523732, 0.39793742, -0.3979374 , -0.0112801, 0.18093119};
 
+Pauli_str =[hydrogen_Pauli;coeffs];
+hamiltonian = struct(Pauli_str{:});
 
-hamiltonian.Pauli_Term = hydrogen_Pauli;
-hamiltonian.Coeffs = coeffs;
 
 %% 3. Build Bell State circuit
 c1 = quantumCircuit([hGate(1) cxGate(1,2) ]); 
@@ -72,17 +93,26 @@ cloud_transpiler_service = TranspilerService(authParams);
 
 %%%% Execute the transpiler Service
 transpiled_circuit = cloud_transpiler_service.run(qasm, backend,transpilationOptions); 
+%%
+
+%%%% Circuit 1 to be executed
+circuit1 =transpiled_circuit.qasm;
+observables1 = hamiltonian;
+param_values1 = [];
+precision1 = 0.01;
+
+%%%% Circuit 2 to be executed
+circuit2 =transpiled_circuit.qasm;
+observables2 = hamiltonian;
+param_values2 = [];
+precision2 = 0.06;
 
 %% 5. Execute the circuit using estimator primititve
-job1 = estimator.run(transpiled_circuit.qasm,hamiltonian);
+job1 = estimator.run({circuit1,observables1,param_values1,precision1}, {circuit2,observables2,param_values2,precision2});
 
 if isfield(job1,'session_id')
     estimator.session.service.session_id = job1.session_id;
 end
 %% 5.1 Retrieve the results back
-Results = estimator.Results(job1.id);
-Results
+[Results, exps] = estimator.Results(job1.id);
 
-%% Execute the next job using the session_id of the first job if Start_session is true!
-c2 = quantumCircuit([hGate(1) cxGate(1,2)]);
-job2 = estimator.run(c2,hamiltonian);

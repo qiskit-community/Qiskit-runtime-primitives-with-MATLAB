@@ -15,9 +15,9 @@ clearvars -global;
 
 global session_id;
 %% Generate a graph
-s = [1 1 2 3 3 4];
-t = [2 5 3 4 5 5];
-weights = [1 1 1 1 1 1];
+s = [1 2 3 4 4];
+t = [2 3 4 1 2];
+weights = [1 1 1 1 1];
 G = graph(s,t,weights);
 
 %% Plot the graph
@@ -39,9 +39,9 @@ highlight(h,1:numnodes(G),'MarkerSize',20)
 % service = QiskitRuntimeService(channel,apiToken,crn_service);
 
 %% Setup IBM Quantum Platform credentials
+
 channel = "ibm_quantum";
 apiToken = "MY_IBM_QUANTUM_TOKEN";
-
 
 service = QiskitRuntimeService(channel,apiToken,[]);
 
@@ -51,7 +51,7 @@ if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_brisbane";
+backend="ibm_hanoi";
 
 % service.hub = "your-hub"
 % service.group = "your-group"
@@ -60,22 +60,38 @@ backend="ibm_brisbane";
 %% 1. Enable the session and Estimator
 session = Session(service, backend);  
 
-options = Options();
-options.transpilation_settings.skip_transpilation = false;
-estimator = Estimator(session,options);
+% options = {};
+% options.transpilation.optimization_level = 1;
+% options.twirling.enable_gates = true;
+% options.twirling.enable_measure = true;
+% options.twirling.num_randomizations = "auto";
+% options.twirling.shots_per_randomization = "auto";   
+% options.twirling.strategy = "active-accum";
+% 
+% options.dynamical_decoupling.enable = true;
+% options.dynamical_decoupling.sequence_type = 'XpXm';
+% options.dynamical_decoupling.extra_slack_distribution= 'middle';
+% options.dynamical_decoupling.scheduling_method= 'alap';
+
+estimator = Estimator(session);
+estimator.options.dynamical_decoupling.sequence_type = 'XpXm';
 
 %% 2. Mapping the problem (Maxcut problem) to qubits/Quantum Hamiltonian 
 %%% Convert the Maxcut problem into an Ising Hamiltonian
-[hamiltonian.Pauli_Term,hamiltonian.Coeffs,Offset_value, Offset_string] = Maxcut.ToIsing (G);
+[Hamiltonian.Pauli_Term,Hamiltonian.Coeffs,Offset_value, Offset_string] = Maxcut.ToIsing (G);
+
+Pauli_str =[num2cell(Hamiltonian.Pauli_Term);num2cell(Hamiltonian.Coeffs)];
+hamiltonian = struct(Pauli_str{:});
 
 %% 3. Creating the ansatz circuit/s
-circuit.reps=2;
-circuit.entanglement = "linear";
-circuit.number_qubits = numnodes(G);
+circuit.reps=4;
+circuit.entanglement = "pairwise";
+circuit.number_qubits = strlength(Hamiltonian.Pauli_Term(1));
 circuit.rotation_blocks = ["ry","rx"];
 circuit.num_parameters = ((circuit.reps+1)*size(circuit.rotation_blocks,2))*circuit.number_qubits;
 
 [ansatz, parameterized_ansatz] = Twolocal(circuit);
+
 
 %% 3.1 transpilationOptions for the transpilerService, this would be optional input to the TranspilerService
 transpilationOptions.ai = false;
@@ -125,32 +141,40 @@ rng default %% For reproducibility
 %% 5. Find the solution which is the bitstring with the highest probability
 %%% We need to run the circuit with the acheived optimized parameters usng
 %%% sampler primititve
+sampler = Sampler(session);
 
-sampler = Sampler (session,options);
+shots = 200;
+job     = sampler.run({transpiled_circuit.qasm,angles,shots});
 
-job = sampler.run(transpiled_circuit.qasm,angles);
 results = sampler.Results(job.id);
-%%% extract the bitstring
-string_data = string(fieldnames(results.quasi_dists));
-bitstring_data = replace(string_data,"x","");
-%%% Extract the probabilitites
-probabilities = cell2mat(struct2cell(results.quasi_dists));
 
-%%% Find the bitstring with the highest probability
-bitstring_maxprobability = string_data(find(probabilities==max(probabilities)));
-fprintf('The quantum solution for maxcut is: [ %s ]\n', bitstring_maxprobability);
+num_qubits = length(transpiled_circuit.layout.final); 
+
+Counts = double (decode_and_deserialize(results.x__value__.pub_results.x__value__.data.x__value__.fields.c.x__value__.array.x__value__,1));
+[Bitstring,~,Sorted_prob] = unique(Counts);
+probabilities = accumarray(Sorted_prob,1).';
+%%%%extract the Bitstring with the highest probability
+bits_max = Bitstring(find(probabilities==max(probabilities)));
+bits_max = dec2bin(bits_max(1),num_qubits);
+% Reverse the order of qubits
+x = bits_max(length(bits_max):-1:1);
+
+fprintf('The quantum solution for maxcut is: [ %s ]\n', x);
 
 %%%% plot the results and color the graph using the received bit-string
 %%%% (solution)
-Maxcut.plot_results(G,bitstring_data,probabilities, 'g');
+Maxcut.plot_results(G,Bitstring,probabilities, 'c');
 
 
 %% Define the cost function to calculate the expectation value of the derived Hamiltonian
 function [energy] = cost_function(parameters,arg)    
 
     global session_id
-    % Construct the variational circuit 
-    ansatz = arg.circuit;
+    
+    ansatz =arg.circuit;
+    observables = arg.hamiltonian;
+    param_values = parameters;
+    precision = 0.01;
 
     estimator = arg.estimator; 
 
@@ -158,12 +182,12 @@ function [energy] = cost_function(parameters,arg)
         estimator.session.service.session_id = session_id;
     end
 
-    job       = estimator.run(ansatz,arg.hamiltonian,parameters);
+    job       = estimator.run({ansatz,observables,param_values,precision});
     
     if isfield(job,'session_id')
         session_id = job.session_id;
     end
     %%%% Retrieve the results back
-    results   = estimator.Results(job.id);
-    energy    = results.values;
+    [Results, exps] = estimator.Results(job.id);
+    energy    = exps;
 end
