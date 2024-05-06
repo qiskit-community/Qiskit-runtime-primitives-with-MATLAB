@@ -11,51 +11,98 @@
 
 classdef Estimator
    properties
-       session,
-       circuits,
-       Hamiltonian,
-       options,
+        session,
+        circuits,
+        Hamiltonian,
+        options  
+
    end
    methods
 
-       function obj = Estimator(session,options)
+       function obj = Estimator(session)
             session.service.program_id = "estimator";
             obj.session = session;
+
+            options.resilience.measure_mitigation = true;
+            % options.resilience.measure_noise_learning = NaN;
+            options.resilience.zne_mitigation = false;
+            options.resilience.zne.extrapolator = ["exponential", "linear"];
+            options.resilience.zne.noise_factors = [1, 3, 5];
+            % options.resilience.pec_mitigation = false;
+            % options.resilience.pec = NaN;
+            % options.resilience.layer_noise_learning = NaN;
+            
+            options.default_shots = 1024;
+            
+            options.dynamical_decoupling.enable = true ;
+            options.dynamical_decoupling.sequence_type = "XX";
+            options.dynamical_decoupling.extra_slack_distribution= "middle";
+            options.dynamical_decoupling.scheduling_method= "alap";
+            
+            options.twirling.enable_gates = false;
+            options.twirling.enable_measure = true;
+            options.twirling.num_randomizations = "auto";
+            options.twirling.shots_per_randomization = "auto";
+            options.twirling.strategy = "active-accum"; %% 
+
+            options.resilience_level= 0;
+
             obj.options = options;
 
        end
-
+       %%%% Submit the job through Estimator Primitives
        function jobinfo = run(varargin)
-           %%% Remove classical bit
-            pat = "bit[" + digitsPattern + ("] c;");
-            circuit     = erase(varargin{1,2},pat);
-            %%% Remove measurements
-            pat2 = ("c["|"c =" );
-            circuit     = extractBefore(circuit, pat2);
-            
+
+            circuit    = varargin(1,2:end);
             hubinfo    = varargin{1, 1}.session.service;
-            hamiltonian = varargin{1,3};
-            if nargin==4
-                parameters = varargin{1,4};
-                params = varargin{1, 1}.options.SetOptions(circuit,1, hamiltonian,parameters);
-            else
-                params = varargin{1, 1}.options.SetOptions(circuit,1, hamiltonian);
-            end
+            
+            params = varargin{1, 1}.setparams(circuit);
     
             
             %% Run the circuit on IBM Quantum Estimator primitive
             %%%% Submit the job
             jobinfo = Job.submitJob(params, hubinfo);
 
+        end
+        %%%% retrieve the Estimator results using the job id 
+        function [result, exps] = Results(varargin)
+            job_id      = varargin{1,2};
+            service  = varargin{1, 1}.session.service;
+    
+            result = Job.retrieveResults(job_id, service);
+            
+            %%% decode and deserialize the Pub results
+            exp_val = zeros(1,length(result.results));
+            stds    = zeros(1,length(result.results));
+            
+            for k =1: length(result.results)
+                exp_val(k) = result.results(1).data.evs;
+                stds(k) = result.results(1).data.stds;
+            end
+            exps = exp_val;
+
+        end
+        
+        %%% Set the options for Estimator
+        function params = setparams (varargin)
+        
+            estimator = varargin{1,1};
+            circuit     = varargin(1,2);
+            
+            params = struct;
+            params.pubs ={};
+    
+            for j = 1: length(circuit{1, 1})
+                params.pubs = [params.pubs circuit{1,1}(1,j)];
+            end
+            
+            params.version = 2;
+            params.support_qiskit= false;        
+            params.resilience_level= estimator.options.resilience_level; 
+            params.options = rmfield(estimator.options  ,"resilience_level");
+
+
        end
-      
-      function result = Results(varargin)
-        job_id      = varargin{1,2};
-        service  = varargin{1, 1}.session.service;
-
-        result = Job.retrieveResults(job_id, service);
-
-      end
 
    end
 end

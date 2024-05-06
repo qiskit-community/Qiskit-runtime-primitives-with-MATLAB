@@ -21,30 +21,44 @@ close all;
 
 
 %% Setup IBM Quantum Platform credentials
-% channel = "ibm_quantum";
-% apiToken = "MY_IBM_QUANTUM_TOKEN";
-
 channel = "ibm_quantum";
 apiToken = "MY_IBM_QUANTUM_TOKEN";
 
 service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
-service.Start_session = true; %set to true to enable Qiskit Runtime Session 
+service.Start_session = false; %set to true to enable Qiskit Runtime Session 
 if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_kyoto";
+backend="ibm_bangkok";
 
+% service.hub = "your-hub"
+% service.group = "your-group"
+% service.project = "your-project"
 
 %% 1. Enable the session and Sampler
 session = Session(service, backend);
 
-options = Options();
-options.transpilation_settings.skip_transpilation = true;
-sampler = Sampler(session,options);
+% options = {};
+% options.transpilation.optimization_level = 1;
+% options.twirling.enable_gates = true;
+% options.dynamical_decoupling.enable = true;
+% options.dynamical_decoupling.sequence_type = 'XpXm';
+% options.twirling.enable_gates = true;
+% options.twirling.enable_measure = true;
+% options.twirling.num_randomizations = "auto";
+% options.twirling.shots_per_randomization = "auto";   
+% options.twirling.strategy = "active-accum";
+% 
+% options.dynamical_decoupling.enable = true;
+% options.dynamical_decoupling.sequence_type = 'XpXm';
+% options.dynamical_decoupling.extra_slack_distribution= 'middle';
+% options.dynamical_decoupling.scheduling_method= 'alap';
 
+sampler = Sampler(session);
+sampler.options.twirling.enable_gates = false;
 %% 2. Build Bell State circuit
 c1 = quantumCircuit([hGate(1) cxGate(1,2)]); 
 
@@ -57,7 +71,7 @@ transpilationOptions.coupling_map = [];
 transpilationOptions.qiskit_transpile_options = []; %% 
 transpilationOptions.ai_layout_mode  = 'OPTIMIZE'; %% 'KEEP', 'OPTIMIZE', 'IMPROVE'
 
-%% Authentication parameters
+%%% Authentication parameters
 authParams.token = apiToken;
 authParams.channel = channel;
 
@@ -65,22 +79,37 @@ authParams.channel = channel;
 %%% Define the Service using your Authentications (Token and access channel)
 cloud_transpiler_service = TranspilerService(authParams); 
 
-%%%% Execute the transpiler Service
+%%%%% Execute the transpiler Service
 transpiled_circuit = cloud_transpiler_service.run(qasm, backend,transpilationOptions); 
+%%
+%%%% Circuit 1 to be executed
+circuit1 =transpiled_circuit.qasm;
+param_values1 = [];
+shots1 = 200;
 
+%%%% Circuit 2 to be executed
+circuit2 = transpiled_circuit.qasm;
+param_values2 = [];
+shots2 = 400;
 
 %% 4. Execute the circuit using sampler primititve
-job1 = sampler.run(transpiled_circuit.qasm);
+job1 = sampler.run({circuit1,param_values1,shots1});
 
 if isfield(job1,'session_id')
     sampler.session.service.session_id = job1.session_id;
-end
+end 
 
 
 %% 4.1 Retrieve the results back
 Results = sampler.Results(job1.id);
-Results
 
-%% Execute the next job using the session_id of the first job if Start_session is true!
-c2 = quantumCircuit([hGate(1) cxGate(1,2)]);
-job2 = sampler.run(c2);
+Counts = Results.results.data.c.samples;
+[Bitstring,~,Sorted_prob] = unique(Counts);
+Probs = accumarray(Sorted_prob,1).';
+
+Bit_str = str2num(cell2mat(Bitstring));
+bar (Bit_str,Probs)
+xlabel('Bitstring')
+ylabel('Counts')
+
+

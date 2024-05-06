@@ -62,11 +62,11 @@ classdef Maxcut < handle
         Offset_value  = constant;
         Offset_string = II_string;
         Pauli_terms   = string(Pauli);
-        Pauli_Coeff   = string(coeff);
+        Pauli_Coeff   = double(coeff);
     end
 %%
 function plot_results(G,bitstring_data,probability,color)
-        
+        figure;
         bar(categorical(bitstring_data),probability,color)
         xlabel('Bitstrings')
         ylabel('Probabilities')
@@ -79,15 +79,17 @@ function plot_results(G,bitstring_data,probability,color)
         set(gca,'YTickLabelMode','auto')
         set(gca, 'LineWidth', 2.5)
         %%%% Color the graph based on the qiskit results
-        %%% Find the bitstring with the highest probability
-        bits_max = bitstring_data(find(probability==max(probability)));
-        %%% Convert bitstring to a binary vecotr
-        x_m = bits_max{1}-'0';
-        %%% Reverse the order of qubits
-        x_final = x_m(length(x_m):-1:1);
+     %%%%extract the Bitstring with the highest probability
+        Bit_max = bitstring_data(find(probability==max(probability)));
+        Bit_max = cell2mat(Bit_max(1));
+        
+        Bit_max = dec2bin(hex2dec(Bit_max(1,:)),G.numnodes);
+        % Reverse the order of qubits
+        x_final = Bit_max(length(Bit_max):-1:1);
+
         index =[];
         for i=1:length(x_final)
-            if x_final(i)==1
+            if str2double(x_final(i))==1
                 index = [index i];
             end
         end

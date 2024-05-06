@@ -51,7 +51,7 @@ if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibm_brisbane";
+backend="ibm_bangkok";
 
 % service.hub = "your-hub"
 % service.group = "your-group"
@@ -59,10 +59,24 @@ backend="ibm_brisbane";
 %% 1. Enable the session and Sampler
 session = Session(service, backend);
 
-options = Options();
-options.transpilation_settings.skip_transpilation = true;
-sampler = Sampler(session,options);
+% options = {};
+% options.transpilation.optimization_level = 1;
+% options.twirling.enable_gates = true;
+% options.dynamical_decoupling.enable = true;
+% options.dynamical_decoupling.sequence_type = 'XpXm';
+% options.twirling.enable_gates = true;
+% options.twirling.enable_measure = true;
+% options.twirling.num_randomizations = "auto";
+% options.twirling.shots_per_randomization = "auto";   
+% options.twirling.strategy = "active-accum";
+% 
+% options.dynamical_decoupling.enable = true;
+% options.dynamical_decoupling.sequence_type = 'XpXm';
+% options.dynamical_decoupling.extra_slack_distribution= 'middle';
+% options.dynamical_decoupling.scheduling_method= 'alap';
 
+sampler = Sampler(session);
+sampler.options.twirling.enable_gates = false;
 %% 2. Creating ansatz circuit/s
 circuit.reps=4;
 circuit.entanglement = "linear";
@@ -91,7 +105,7 @@ cloud_transpiler_service = TranspilerService(authParams);
 transpiled_circuit = cloud_transpiler_service.run(parameterized_ansatz, backend,transpilationOptions); 
 
 %% Arguments for the optimizer 
-arg.circuit     = transpiled_circuit.qasm;
+arg.circuit     = transpiled_circuit;
 arg.sampler     = sampler; 
 arg.G = G;
 
@@ -122,21 +136,32 @@ rng default %% For reproducibility
 %%% We need to run the circuit with the acheived optimized parameters usng
 %%% sampler primititve
 
-job = sampler.run(transpiled_circuit.qasm,angles);
-results = sampler.Results(job.id);
-%%% extract the Bitstring
-string_data = string(fieldnames(results.quasi_dists));
-bitstring_data = replace(string_data,"x","");
-%%% Extract the probabilitites
-probabilities = cell2mat(struct2cell(results.quasi_dists));
+shots = 200;
+job     = sampler.run({transpiled_circuit.qasm,angles,shots});
 
-%%% Find the bitstring with the highest probability
-bitstring_maxprobability = string_data(find(probabilities==max(probabilities)));
-fprintf('The quantum solution for maxcut is: [ %s ]\n', bitstring_maxprobability);
+results = sampler.Results(job.id);
+
+num_qubits = length(arg.circuit.layout.final); 
+
+num_qubits = length(arg.circuit.layout.final); 
+
+Counts = results.results.data.c.samples;
+[Bitstring,~,Sorted_prob] = unique(Counts);
+probabilities = accumarray(Sorted_prob,1).';
+
+%%%%extract the Bitstring with the highest probability
+Bit_max = Bitstring(find(probabilities==max(probabilities)));
+Bit_max = cell2mat(Bit_max(1));
+
+Bit_max = dec2bin(hex2dec(Bit_max(1,:)),num_qubits);
+% Reverse the order of qubits
+x = Bit_max(length(Bit_max):-1:1);
+
+fprintf('The quantum solution for maxcut problem is: [ %s ]\n', x);
 
 %%%% plot the results and color the graph using the received bit-string
 %%%% (solution)
-Maxcut.plot_results(G,bitstring_data,probabilities, 'c');
+Maxcut.plot_results(G,Bitstring,probabilities, 'c');
 
 
 %% Define the cost function to calculate the expectation value of the retreived bit-strings
@@ -144,33 +169,37 @@ function energy = cost_function (parameters,arg)
     
     global session_id   
 
-    ansatz = arg.circuit;
+    ansatz = arg.circuit.qasm;
     %%%% Run Sampler primitive
     sampler = arg.sampler;
     if sampler.session.service.Start_session
         sampler.session.service.session_id = session_id;
     end
+    
+    shots = 200;
+    job     = sampler.run({ansatz,parameters,shots});
 
-    job     = sampler.run(ansatz,parameters);
     %%%% Retrieve the results back
     if isfield(job,'session_id')
         session_id = job.session_id;
     end
     
     results = sampler.Results(job.id);
+
+    num_qubits = length(arg.circuit.layout.final); 
+
+    Counts = results.results.data.c.samples;
+    [Bitstring,~,Sorted_prob] = unique(Counts);
+    probabilities = accumarray(Sorted_prob,1).';
     
-    %%%%extract the Bitstring
-    string_data = string(fieldnames(results.quasi_dists));
-    %%%% Extract the probabilitites
-    probabilities = cell2mat(struct2cell(results.quasi_dists));
-    %%%% Find the bitstring with the highest probability
-    bits_max = string_data(find(probabilities==max(probabilities)));
-    % Convert bitstring to a binary vecotr
-    x_m = bits_max{1}-'0';
-    x_m(1) = [];
+    %%%%extract the Bitstring with the highest probability
+    Bit_max = Bitstring(find(probabilities==max(probabilities)));
+    Bit_max = cell2mat(Bit_max(1));
+
+    Bit_max = dec2bin(hex2dec(Bit_max(1,:)),num_qubits);
     % Reverse the order of qubits
-    x = x_m(length(x_m):-1:1);
-    disp(x)
+    x = Bit_max(length(Bit_max):-1:1);
+    fprintf('The x value is: %s\n' , x)
     %%%% Calculate the expectation value using the bit string with the
     %%%% highest probability
     energy = - evaluate_fcn(x,arg.G);
@@ -182,7 +211,7 @@ function expectation_value = evaluate_fcn(x_value,G)
         %%% Create the objective function
         for i=1:length(x_value)
             for j=1:length(x_value)
-                T(i,j) = W(i,j)*x_value(i)*(1-x_value(j));
+                T(i,j) = W(i,j)*str2double(x_value(i))*(1-str2double(x_value(j)));
             end
         end
         obj = sum(sum(T));

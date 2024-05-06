@@ -28,7 +28,6 @@ global session_id;
 channel = "ibm_quantum";
 apiToken = "MY_IBM_QUANTUM_TOKEN";
 
-
 service = QiskitRuntimeService(channel,apiToken,[]);
 
 %% Define backend and access
@@ -37,33 +36,44 @@ if service.Start_session ==true;
     service.session_mode = "batch";
 end
 
-backend="ibmq_mumbai";
+backend="ibm_bangkok";
 
 % service.hub = "your-hub"
 % service.group = "your-group"
 % service.project = "your-project"
-
-
 %% 1. Enable the session and Estimator
 session = Session(service, backend);  
 
-options = Options();
-options.transpilation_settings.skip_transpilation = false;
-estimator = Estimator(session,options);
+% options = {};
+% options.transpilation.optimization_level = 1;
+% options.twirling.enable_gates = true;
+% options.twirling.enable_measure = true;
+% options.twirling.num_randomizations = "auto";
+% options.twirling.shots_per_randomization = "auto";   
+% options.twirling.strategy = "active-accum";
+% 
+% options.dynamical_decoupling.enable = true;
+% options.dynamical_decoupling.sequence_type = 'XpXm';
+% options.dynamical_decoupling.extra_slack_distribution= 'middle';
+% options.dynamical_decoupling.scheduling_method= 'alap';
+
+estimator = Estimator(session);
+estimator.options.dynamical_decoupling.sequence_type = 'XpXm';
 
 %% 1. Mapping the problem (H2 molecule) to qubits/Quantum Hamiltonian
 %%% The Hamiltonian (Pauli terms and coefficients) for a bonding distance
 %%% of 0.72 Angstrom will be:
-hydrogen_Pauli = ["II","IZ","ZI","ZZ","XX"];
-coeffs = string([-1.0523732, 0.39793742, -0.3979374 , -0.0112801, 0.18093119]);
+hydrogen_Pauli = {"II","IZ","ZI","ZZ","XX"};
+coeffs = {-1.0523732, 0.39793742, -0.3979374 , -0.0112801, 0.18093119};
 
-hamiltonian.Pauli_Term = hydrogen_Pauli;
-hamiltonian.Coeffs = coeffs;
+
+Pauli_str =[hydrogen_Pauli;coeffs];
+hamiltonian = struct(Pauli_str{:});
 
 %% 2. Choosing the ansatz circuit/s
 circuit.reps=4;
 circuit.entanglement = "pairwise";
-circuit.number_qubits = strlength(hydrogen_Pauli(1));
+circuit.number_qubits = strlength(hydrogen_Pauli{1});
 circuit.rotation_blocks = ["ry","rx"];
 circuit.num_parameters = ((circuit.reps+1)*size(circuit.rotation_blocks,2))*circuit.number_qubits;
 
@@ -91,7 +101,8 @@ transpiled_circuit = cloud_transpiler_service.run(parameterized_ansatz, backend,
 %% Arguments for the optimizer 
 arg.hamiltonian = hamiltonian;
 arg.circuit     = transpiled_circuit.qasm;
-arg.estimator   = estimator;
+arg.estimator   = estimator; 
+
 
 %% Define the cost function
 cost_func = @(theta) cost_function(theta,arg);
@@ -121,19 +132,24 @@ fprintf('Ground state energy of H2 molecule for bonding distance 0.72 Angstrom: 
 function [energy] = cost_function(parameters,arg)    
 
     global session_id
+    
+    ansatz =arg.circuit;
+    observables = arg.hamiltonian;
+    param_values = parameters;
+    precision = 0.01;
 
     estimator = arg.estimator; 
-    ansatz = arg.circuit;
+
     if estimator.session.service.Start_session
         estimator.session.service.session_id = session_id;
     end
 
-    job       = estimator.run(ansatz,arg.hamiltonian,parameters);
+    job       = estimator.run({ansatz,observables,param_values,precision});
     
     if isfield(job,'session_id')
         session_id = job.session_id;
     end
     %%%% Retrieve the results back
-    results   = estimator.Results(job.id);
-    energy    = results.values;
+    [Results, exps] = estimator.Results(job.id);
+    energy    = exps;
 end
