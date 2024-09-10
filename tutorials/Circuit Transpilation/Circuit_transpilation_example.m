@@ -54,19 +54,13 @@ service.project = "your-project";
 %% 1. Enable the session and Sampler
 session = Session(service, backend);
 
-
-service.Start_session = 1;
-
-
 sampler = Sampler(session);
 sampler.options.twirling.enable_gates = false;
 
-
-%%%% Circuit 1 to be executed
+%% Circuit 1 to be executed
 circuit1 =transpiled_circuit.qasm;
 param_values1 = [];
 shots1 = 200;
-
 
 %% 4. Execute the transpiled circuit using sampler primititve
 job1 = sampler.run({circuit1,param_values1,shots1});
@@ -74,7 +68,6 @@ job1 = sampler.run({circuit1,param_values1,shots1});
 if isfield(job1,'session_id')
     sampler.session.service.session_id = job1.session_id;
 end
-
 
 %% 4.1 Retrieve the results back
 Results = sampler.Results(job1.id);
