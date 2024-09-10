@@ -8,9 +8,6 @@ apiToken = "MY_IBM_QUANTUM_TOKEN";
 %% Define backend and access
 backend="ibm_kyoto";
 
-% service.hub = "your-hub"
-% service.group = "your-group"
-% service.project = "your-project"
 %% 1. Build Bell State circuit, transpile it using TranspilerService and create a qasm3 string
 c1 = quantumCircuit([hGate(1) cxGate(1,2)]); 
 
@@ -42,24 +39,37 @@ cloud_transpiler_service = TranspilerService(authParams);
 %%%% Execute the transpiler Service
 transpiled_circuit = cloud_transpiler_service.run(qasm, backend,transpilationOptions); 
 
-%% 3. Enable the session and Sampler
-
+%%
 service = QiskitRuntimeService(channel,apiToken,[]);
 
-service.hub = "ibm-q-internal";
-service.group = "deployed";
-service.project = "default";
+%% Define backend and access
+service.Start_session = true; %set to true to enable Qiskit Runtime Session 
+if service.Start_session ==true
+    service.session_mode = "batch";
+end
+
+service.hub = "your-hub";
+service.group = "your-group";
+service.project = "your-project";
+%% 1. Enable the session and Sampler
+session = Session(service, backend);
+
 
 service.Start_session = 1;
 
-session = Session(service, backend);
 
-options = Options();
-options.transpilation_settings.skip_transpilation = true;
-sampler = Sampler(session,options);
+sampler = Sampler(session);
+sampler.options.twirling.enable_gates = false;
+
+
+%%%% Circuit 1 to be executed
+circuit1 =transpiled_circuit.qasm;
+param_values1 = [];
+shots1 = 200;
+
 
 %% 4. Execute the transpiled circuit using sampler primititve
-job1 = sampler.run(transpiled_circuit.qasm);
+job1 = sampler.run({circuit1,param_values1,shots1});
 
 if isfield(job1,'session_id')
     sampler.session.service.session_id = job1.session_id;
@@ -69,8 +79,3 @@ end
 %% 4.1 Retrieve the results back
 Results = sampler.Results(job1.id);
 Results
-
-
-
-
-
