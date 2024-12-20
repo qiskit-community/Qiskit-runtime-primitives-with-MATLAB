@@ -35,7 +35,7 @@ classdef Sampler
             options.twirling.shots_per_randomization = "auto";
             options.twirling.strategy = "active-accum"; %% 
 
-            options.transpilation.optimization_level = 1;
+            % options.transpilation.optimization_level = 1;
 
             obj.options = options;
        end
